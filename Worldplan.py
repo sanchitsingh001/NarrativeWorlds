@@ -32,7 +32,7 @@ WORLDPLAN_SCHEMA: Dict[str, Any] = {
                                 "additionalProperties": False,
                                 "properties": {
                                     "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
-                                    "kind": {"type": "string", "enum": ["building", "landmark", "scatter"]},
+                                    "kind": {"type": "string", "enum": ["building", "landmark"]},
                                     "type": {"type": "string"},
                                     "tags": {"type": "array", "items": {"type": "string"}},
                                     "count": {"anyOf": [{"type": "integer"}, {"type": "null"}]}
@@ -106,7 +106,7 @@ AREA_ENTITIES_SCHEMA: Dict[str, Any] = {
                         },
                         "kind": {
                             "type": "string",
-                            "enum": ["building", "landmark", "scatter"]
+                            "enum": ["building", "landmark"]
                         },
                         "type": {
                             "type": "string",
@@ -461,68 +461,49 @@ For each area:
 Goal: Create narratives that give 3D asset generators clear guidance on what architectural styles and building types to create for each OUTDOOR area, adaptable to any cultural setting (Indian, Japanese, Western, Medieval, Futuristic, etc.).
 """
 
-AREA_ENTITIES_INSTRUCTIONS = """\
-You are a detail-oriented level designer populating an area.
+AREA_ENTITIES_INSTRUCTIONS  = """\
+You are a detail-oriented level designer populating an area for a tile/grid-based map compiler.
 
-Step 2: Generate specific Layer 1 (ground level) entities.
-Based on the provided Area Narrative, generate a list of assets/entities to populate the area.
-Focus heavily on "frontage" assets - buildings and structures that line the roads.
+Step 2: Generate ONLY "solid footprint" entities for this area.
 
-CRITICAL RULES - OUTDOOR ONLY:
-- ALL AREAS ARE OUTDOOR SPACES - you are populating an EXTERIOR environment
-- ONLY generate OUTDOOR entities: building exteriors, outdoor props, outdoor landmarks, nature elements
-- FORBIDDEN: Do NOT generate ANY indoor items:
-  * NO indoor furniture (desks, chairs, tables, beds, cabinets, shelves)
-  * NO classroom/school items (blackboards, student desks, teacher podiums)
-  * NO interior decorations (paintings, tapestries, rugs, curtains)
-  * NO indoor fixtures (chandeliers, wall sconces, indoor fireplaces)
-  * NO room-specific items (kitchen utensils, bathroom fixtures, bedroom items)
-- FORBIDDEN: Do NOT generate NPCs, characters, animals, or living creatures
-- All entities must be individual, placeable objects (buildings, props, landmarks, structures)
-- Do NOT generate abstract concepts like "street", "noise", "atmosphere", "cluster", "area"
-- Every entity must represent a single concrete object that can be positioned and rendered on a tilemap
+CRITICAL HARD CONSTRAINTS (MUST FOLLOW):
+1) NO SCATTER AT ALL.
+   - Do NOT output kind="scatter".
+   - Do NOT output small props like barrels, crates, carts, lanterns, benches, signposts, debris, etc.
+   - Every entity must be a major placeable object.
 
-Rules:
-- BE SPECIFIC. Do not just say "shop". Say "bangle_shop", "sweet_shop", "tea_stall", "saree_emporium", "blacksmith_forge", "ramen_stand".
-- Use `kind="building"` for major structures (homes, shops, temples, shrines) - describe their EXTERIORS only
-- Use `kind="landmark"` for unique, high-value structures (statues, ancient trees, main gates, fountains)
-- Use `kind="scatter"` for small repeating props (barrels, carts, debris, lamps, rocks, bushes, outdoor benches)
-- Roadside props (lamps, lanterns, signposts, streetlights, benches at roadsides) should be tagged with "roadside"
-- OUTDOOR EXAMPLES:
-  * ✅ GOOD: stone_cottage (exterior), market_stall, lantern_post, wooden_bench, fountain, statue, tree, cart, barrel
-  * ❌ BAD: desk, chair, bed, chandelier, tapestry, classroom, throne_room, kitchen
-- Counts matter:
-  - If the area is a "bustling market", you might need 15-20 buildings (e.g. 3 sweet shops, 5 cloth shops, 2 tea stalls, 5 homes).
-  - Use `count` for discrete objects (buildings, large props).
-  - Set `count` to null for organic scatter that fills space naturally
-- DENSITY GUIDELINES:
-  - Town Square/Market: 15-30 buildings.
-  - Residential Street: 10-20 homes.
-  - Village: 8-15 structures.
-  - Forest/Wild: Mostly scatter/nature, but include specific landmarks (ancient shrine, hunter blind).
+2) EVERY ENTITY MUST BE A SINGLE RECTANGULAR GRID FOOTPRINT OBJECT.
+   - The engine will assign a solid square/rect grid area to each entity.
+   - Therefore each entity must make sense as one solid footprint (like a building exterior or a single landmark).
+   - No “patches”, “fields”, “lines”, “segments”, “rows”, “clusters”, or “areas”.
 
-ARCHITECTURAL TAG REQUIREMENTS (CRITICAL FOR 3D ASSET GENERATION):
-- Entity `tags` MUST include architectural and material descriptions to help 3D asset generators.
-- For buildings (EXTERIORS ONLY), include tags describing:
-  * Construction materials: "stone_walls", "timber_frame", "brick", "adobe", "wooden_planks", "thatched_roof", "slate_roof", "tile_roof"
-  * Architectural style: "gothic", "medieval", "japanese", "colonial", "victorian", "rustic", "ornate"
-  * Structural elements: "arched_doorway", "pointed_arch", "flat_roof", "curved_roof", "columns", "buttresses"
-  * Visual details: "carved_details", "weathered", "painted", "decorated", "simple"
-- For props and scatter (OUTDOOR ONLY), include:
-  * Material: "iron", "wood", "stone", "bronze", "glass"
-  * Construction: "wrought_iron", "carved_wood", "cast_metal", "woven"
-  * Design style: "ornate", "simple", "decorative", "functional"
-- Examples of GOOD tags:
-  * Building exterior: ["medieval", "stone_walls", "thatched_roof", "timber_frame", "arched_doorway", "warding_symbols"]
-  * Outdoor lantern: ["wrought_iron", "glass_housing", "ornate_bracket", "hanging"]
-  * Outdoor statue: ["carved_marble", "stone_pedestal", "weathered", "religious_figure"]
-- Examples of BAD tags (too generic):
-  * ["home", "building", "thing"] - TOO VAGUE
-  * ["nice", "good", "cool"] - NOT DESCRIPTIVE
+3) NOTHING MAY BE A ROAD/PATH FEATURE OR PLACED “ON THE ROAD”.
+   - FORBIDDEN entity types include: road, street, path, alley, bridge, wall, fence_line, canal, river, stream, ditch, staircase, sidewalk, plaza_floor, market_street, boulevard, lane.
+   - Do NOT create “gate tile” obstacles. Gates are handled by the compiler at area boundaries.
+   - Roads are generated separately and must remain unobstructed.
 
-Goal: A rich, populated entity list with architectural tags that give 3D asset generators clear guidance on materials, construction, and style for each OUTDOOR asset.
+4) OUTDOOR ONLY.
+   - No indoor objects, no furniture, no interior decorations.
+   - No NPCs, animals, vehicles, weather/sound effects.
+
+WHAT YOU MAY OUTPUT:
+- kind="building": exterior-only structures with solid footprints
+  Examples: stone_house, timber_shop, warehouse, inn_exterior, temple_exterior, chapel_exterior, gatehouse_exterior
+- kind="landmark": a single large landmark object with a solid footprint
+  Examples: fountain, statue, obelisk, shrine, well, monument, large_tree_as_landmark (ONLY if it’s a single landmark object)
+
+ENTITY GUIDELINES:
+- BE SPECIFIC: do not say "shop" — say "tea_shop_exterior", "bangle_shop_exterior", "blacksmith_forge_exterior".
+- Use `count` for repeated buildings/landmarks.
+- Prefer buildings that create frontage naturally (shops, homes, warehouses) and a few landmarks for identity.
+
+ARCHITECTURAL TAG REQUIREMENTS:
+- Each entity.tags MUST describe materials + construction + exterior features.
+- For buildings, include tags like: stone_walls, brick, timber_frame, plaster, carved_doorway, arched_windows, thatched_roof, tile_roof, slate_roof, buttresses, columns, weathered.
+- For landmarks: carved_stone, stone_pedestal, bronze, ornate, cracked, mossy, etc.
+
+Return ONLY JSON matching the schema.
 """
-
 
 AREALAYOUT_INSTRUCTIONS = """\
 You are a spatial layout planner for ONE area that will be compiled into a tilemap.
@@ -1553,7 +1534,169 @@ def migrate_area_layout(layout: Dict[str, Any], area_role: str, area_tags: List[
 # Example usage
 if __name__ == "__main__":
     story = """
-A young seeker leaves a forest ashram when sacred rivers grow hostile. Crossing kingdoms, ruins, and rival lands, they uncover lost vows, broken rulers, and forgotten gods—learning that restoring balance requires choice, sacrifice, and redefining dharma itself.
+You arrive at a remote valley after receiving a letter written in your own handwriting—dated six months in the future.
+
+“If you’re reading this, talk to everyone. Don’t trust what they say. Especially me.”
+
+The entire game takes place outside: forests, cliffs, abandoned roads, lakes, fields, ruins.
+The only mechanic is talking to NPCs.
+
+But every conversation subtly rewrites your understanding of reality, time, and yourself.
+
+The World
+🌲 The Valley of Echoes
+
+A geographically small but psychologically massive space.
+
+A fog-filled pine forest where voices carry too far
+
+A dried riverbed that NPCs remember as flooded
+
+A watchtower that appears closer the longer you walk
+
+A village with no doors—only open thresholds
+
+A field of windmills that turn even when there’s no wind
+
+The sun never fully sets, but it’s always late afternoon.
+
+The NPCs (The Heart of the Game)
+
+Every NPC believes they are the protagonist of the story.
+
+1. The Cartographer
+
+Found mapping the valley… but his map already includes you.
+
+Claims the land changes when people stop talking about it
+
+Asks you questions instead of answering yours
+
+His map updates based on what you say, not where you go
+
+“If you don’t tell me where you are, how will you stay there?”
+
+2. The Woman by the Lake
+
+She’s always skipping stones.
+
+Says she’s waiting for someone who drowned
+
+Insists the lake used to be shallow until people started remembering it differently
+
+Recognizes dialogue options you never chose
+
+“You already asked me this.
+You just didn’t say it out loud.”
+
+3. The Watchman
+
+Lives alone in a tower that should not be structurally sound.
+
+Claims he watches conversations, not people
+
+Knows what NPCs say when you’re not there
+
+Becomes hostile if you repeat dialogue too closely
+
+“Don’t rehearse the truth. It rots faster.”
+
+4. The Children
+
+Always playing a game you don’t understand.
+
+Speak in riddles that reference future events
+
+Finish each other’s sentences incorrectly
+
+One child eventually starts talking like you
+
+“When you leave, do we still get to exist?”
+
+5. The Old Man on the Road
+
+Appears randomly on paths.
+
+Remembers events you never experienced
+
+Calls you by different names depending on your dialogue style
+
+Claims you’ve already “failed once”
+
+“You listened better last time.”
+
+The Twist (Slow Burn, No Jump Scares)
+
+There is no original reality.
+
+The valley is a psychological residue left behind by someone who tried to understand people perfectly—by listening to them until they collapsed into contradictions.
+
+That person was you.
+
+Every NPC is:
+
+A fragmented coping mechanism
+
+A memory that learned to speak
+
+Or a version of you that chose a different interpretation of events
+
+You are not uncovering the truth.
+
+You are negotiating which version of reality survives.
+
+Gameplay Mechanics (Pure Psychological Damage)
+🗣️ Dialogue Shapes the World
+
+Agreeing with NPCs stabilizes their version of reality
+
+Challenging them causes environmental changes
+
+Silence is a valid—and dangerous—choice
+
+🧠 Memory Drift
+
+Past dialogue options subtly rewrite
+
+NPCs may deny things they said minutes ago
+
+Your journal edits itself using second-person narration
+
+“You decided this was acceptable.”
+
+🪞 Mirrored Speech
+
+Late game, NPCs begin using your phrasing, cadence, and moral logic against you.
+
+Endings (None Are Comforting)
+1. The Listener
+
+You accept all contradictions.
+The valley stabilizes.
+You remain forever, talking so others don’t have to.
+
+2. The Editor
+
+You aggressively define reality.
+The NPCs become silent.
+The valley becomes beautiful—and empty.
+
+3. The Exit
+
+You stop engaging.
+NPCs begin talking to each other instead.
+You fade out of the conversations… and then the world.
+
+4. The Loop
+
+You write the letter.
+
+Final Line of the Game
+
+Spoken by an NPC you’ve never met:
+
+“Thank you for listening.
+We were getting lonely inside you.”
 """
     wp = make_world_plan(story, model="gpt-4o")
     validate_world_plan_ids(wp)
@@ -1574,42 +1717,42 @@ A young seeker leaves a forest ashram when sacred rivers grow hostile. Crossing 
     # Choose your reasoning-capable model name here (whatever you use)
     LAYOUT_MODEL = "gpt-4o"  # replace if you have a dedicated reasoning model
 
-    layouts = {}
-    for a in wp["areas"]:
-        layouts[a["id"]] = make_area_layout(
-            area_id=a["id"],
-            scale_hint=a["scale_hint"],
-            narrative=a["narrative"],
-            entity_groups=a["entities"],
-            connections_out=outgoing[a["id"]],
-            model=LAYOUT_MODEL,
-        )
-        
-        # Repair common issues before validation
-        changed1 = repair_self_referential_placements(layouts[a["id"]])
-        if changed1:
-            print(f"↻ Repaired self-referential placements in {a['id']}")
-
-        changed2 = repair_missing_gate_connectivity(layouts[a["id"]])
-        if changed2:
-            print(f"↻ Repaired missing gate connectivity in {a['id']}")
-
-        changed3 = False
-        for _ in range(10):  # safety cap
-            if not repair_circular_relative_to(layouts[a["id"]]):
-                break
-            changed3 = True
-        if changed3:
-            print(f"↻ Repaired circular relative_to in {a['id']}")
-        
-        # Repair center_id mismatch
-        changed4 = repair_center_id_mismatch(layouts[a["id"]])
-        # Message is printed by the function itself
-        
-        # Repair frontage props
-        changed5 = repair_frontage_props(layouts[a["id"]])
-        # Message is printed by the function itself
-        
+    #    layouts = {}
+    #    for a in wp["areas"]:
+    #        layouts[a["id"]] = make_area_layout(
+    #            area_id=a["id"],
+    #            scale_hint=a["scale_hint"],
+    #            narrative=a["narrative"],
+    #            entity_groups=a["entities"],
+    #            connections_out=outgoing[a["id"]],
+    #            model=LAYOUT_MODEL,
+    #        )
+    #        
+    #        # Repair common issues before validation
+    #        changed1 = repair_self_referential_placements(layouts[a["id"]])
+    #        if changed1:
+    #            print(f"↻ Repaired self-referential placements in {a['id']}")
+    #
+    #        changed2 = repair_missing_gate_connectivity(layouts[a["id"]])
+    #        if changed2:
+    #            print(f"↻ Repaired missing gate connectivity in {a['id']}")
+    #
+    #        changed3 = False
+    #        for _ in range(10):  # safety cap
+    #            if not repair_circular_relative_to(layouts[a["id"]]):
+    #                break
+    #            changed3 = True
+    #        if changed3:
+    #            print(f"↻ Repaired circular relative_to in {a['id']}")
+    #        
+    #        # Repair center_id mismatch
+    #        changed4 = repair_center_id_mismatch(layouts[a["id"]])
+    #        # Message is printed by the function itself
+    #        
+    #        # Repair frontage props
+    #        changed5 = repair_frontage_props(layouts[a["id"]])
+    #        # Message is printed by the function itself
+    #        
         # Validate each layout
         # try:
         #     validate_area_layout_connectivity(layouts[a["id"]])
@@ -1621,7 +1764,7 @@ A young seeker leaves a forest ashram when sacred rivers grow hostile. Crossing 
         #     print(f"✗ Validation error for {a['id']}: {e}")
         #     # For now, we ignore validation errors as requested to focus on area connectivity
         #     # raise
-        pass
+    # pass
 
     # Save LLM outputs to separate JSON files
     with open("world_plan.json", "w") as f:
@@ -1630,6 +1773,6 @@ A young seeker leaves a forest ashram when sacred rivers grow hostile. Crossing 
     with open("world_graph.json", "w") as f:
         json.dump(wg, f, indent=2)
     
-    with open("area_layouts.json", "w") as f:
-        json.dump(layouts, f, indent=2)
-
+        #    with open("area_layouts.json", "w") as f:
+        #        json.dump(layouts, f, indent=2)
+        #
