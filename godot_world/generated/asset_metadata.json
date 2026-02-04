@@ -1,0 +1,219 @@
+{
+  "Meshy_AI_japanese_building_0113061729_texture": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 2.000185966491699,
+    "bbox_depth": 1.8962700366973877,
+    "bbox_height": 1.6174370050430298
+  },
+  "merchant_cart": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.5684809684753418,
+    "bbox_depth": 0.8982362747192383,
+    "bbox_height": 0.8022142648696899
+  },
+  "market_gate": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.8306289911270142,
+    "bbox_depth": 0.37975916266441345,
+    "bbox_height": 0.8524700999259949
+  },
+  "flower_petals_stand": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.9327399730682373,
+    "bbox_depth": 0.9129002690315247,
+    "bbox_height": 1.0309044122695923
+  },
+  "home_above_shop": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.8105499744415283,
+    "bbox_depth": 0.6450551748275757,
+    "bbox_height": 0.8110672235488892
+  },
+  "ancient_banyan_tree": {
+    "front_yaw_deg": 90,
+    "front_panel": "B",
+    "bbox_width": 0.9457070231437683,
+    "bbox_depth": 0.9411271810531616,
+    "bbox_height": 0.8710092306137085
+  },
+  "Meshy_AI_a_tree_0113061856_texture": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 1.3217499256134033,
+    "bbox_depth": 1.375093936920166,
+    "bbox_height": 1.9982659816741943
+  },
+  "Meshy_AI_Frozen_Building_2_0113061643_texture": {
+    "front_yaw_deg": 270,
+    "front_panel": "D",
+    "bbox_width": 1.89302396774292,
+    "bbox_depth": 1.214406967163086,
+    "bbox_height": 1.8911840915679932
+  },
+  "Meshy_AI_Bench_0113061806_texture": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 1.9038259983062744,
+    "bbox_depth": 0.721297025680542,
+    "bbox_height": 0.48301199078559875
+  },
+  "Haveli": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.8112460374832153,
+    "bbox_depth": 0.775715172290802,
+    "bbox_height": 0.555053174495697
+  },
+  "lantern_upgrade_shop": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.8841700553894043,
+    "bbox_depth": 0.6946672201156616,
+    "bbox_height": 0.7807372212409973
+  },
+  "Meshy_AI_japanese_building_0113061745_texture": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 1.53090500831604,
+    "bbox_depth": 1.6154760122299194,
+    "bbox_height": 1.980989933013916
+  },
+  "candle_maker": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.7500840425491333,
+    "bbox_depth": 0.6384412050247192,
+    "bbox_height": 0.7872452139854431
+  },
+  "street_lantern": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.4090290069580078,
+    "bbox_depth": 0.40905821323394775,
+    "bbox_height": 1.1968971490859985
+  },
+  "Meshy_AI_building_0113014233_texture": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 1.9039149284362793,
+    "bbox_depth": 1.6007310152053833,
+    "bbox_height": 1.593546986579895
+  },
+  "home_1": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 1.3134739398956299,
+    "bbox_depth": 1.4371418952941895,
+    "bbox_height": 1.9363670349121094
+  },
+  "spice_shop": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.7104589939117432,
+    "bbox_depth": 0.8454561233520508,
+    "bbox_height": 0.6237751841545105
+  },
+  "spell_shop": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.7310259938240051,
+    "bbox_depth": 0.7873932123184204,
+    "bbox_height": 0.8454912304878235
+  },
+  "tool_repair_stall": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.8027539849281311,
+    "bbox_depth": 0.6266021728515625,
+    "bbox_height": 0.761265218257904
+  },
+  "hanging_lantern": {
+    "front_yaw_deg": 90,
+    "front_panel": "B",
+    "bbox_width": 0.8291450142860413,
+    "bbox_depth": 0.36147817969322205,
+    "bbox_height": 1.092846155166626
+  },
+  "Meshy_AI_An_ancient_Indian_god_0114020801_texture": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 1.9120349884033203,
+    "bbox_depth": 1.3288841247558594,
+    "bbox_height": 1.278196096420288
+  },
+  "Meshy_AI_tree_0113061835_texture": {
+    "front_yaw_deg": 90,
+    "front_panel": "B",
+    "bbox_width": 1.9841680526733398,
+    "bbox_depth": 1.812859058380127,
+    "bbox_height": 1.992218017578125
+  },
+  "wooden_bench": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.401434987783432,
+    "bbox_depth": 1.0093750953674316,
+    "bbox_height": 0.6547161936759949
+  },
+  "barrel_stack": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.9136430025100708,
+    "bbox_depth": 1.0409032106399536,
+    "bbox_height": 0.5977341532707214
+  },
+  "Meshy_AI_Bird_Bench_0113061812_texture": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 1.904096007347107,
+    "bbox_depth": 0.8887270092964172,
+    "bbox_height": 1.2536959648132324
+  },
+  "EU-home": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.7941790223121643,
+    "bbox_depth": 0.7971861362457275,
+    "bbox_height": 0.6707772016525269
+  },
+  "village_inn_ruins": {
+    "front_yaw_deg": 270,
+    "front_panel": "D",
+    "bbox_width": 0.8714669942855835,
+    "bbox_depth": 0.9877332448959351,
+    "bbox_height": 0.6289141774177551
+  },
+  "abandoned_inn": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.7977629899978638,
+    "bbox_depth": 0.6157441139221191,
+    "bbox_height": 0.7398591637611389
+  },
+  "merchant_hall": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.8470879793167114,
+    "bbox_depth": 0.6693141460418701,
+    "bbox_height": 0.8464802503585815
+  },
+  "shingled_tavern": {
+    "front_yaw_deg": 180,
+    "front_panel": "C",
+    "bbox_width": 0.7496410012245178,
+    "bbox_depth": 0.6634081602096558,
+    "bbox_height": 0.7261481881141663
+  },
+  "traveler_rest_house": {
+    "front_yaw_deg": 0,
+    "front_panel": "A",
+    "bbox_width": 0.6543439626693726,
+    "bbox_depth": 0.8649431467056274,
+    "bbox_height": 0.6830841898918152
+  }
+}

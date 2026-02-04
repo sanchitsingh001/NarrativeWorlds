@@ -29,11 +29,16 @@ import random
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+# Optional plotting dependency. We still want JSON output even if matplotlib
+# isn't installed (e.g., minimal environments / CI).
+HAS_MPL = True
+try:
+    import matplotlib  # type: ignore
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt  # type: ignore
+    from matplotlib.patches import Rectangle  # type: ignore
+except Exception:
+    HAS_MPL = False
 
 # -----------------------------
 # Config
@@ -84,24 +89,64 @@ ENTITY_LABEL_BOX = os.environ.get("ENTITY_LABEL_BOX", "1") in {"1", "true", "Tru
 DIST_BUCKETS = ["tiny", "small", "medium", "large"]
 DIRS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 
-# NEW: size buckets (scale base footprint from _infer_footprint_tiles)
+# Size buckets: LLM outputs only these strings; we map to exact (w, h) in tiles
 SIZE_BUCKETS = ["tiny", "small", "medium", "large", "huge"]
+
+# Map size_bucket -> (w_tiles, h_tiles). LLM chooses bucket; we use these exact numbers for placement.
+SIZE_BUCKET_FOOTPRINT: Dict[str, Tuple[float, float]] = {
+    "tiny": (2.0, 2.0),
+    "small": (3.0, 3.0),
+    "medium": (5.0, 5.0),
+    "large": (7.0, 7.0),
+    "huge": (10.0, 10.0),
+}
+
+
+def _size_bucket_to_footprint(size_bucket: str) -> Tuple[float, float]:
+    """Convert LLM size_bucket string to exact (w, h) in tiles."""
+    b = str(size_bucket).lower().strip()
+    return SIZE_BUCKET_FOOTPRINT.get(b, SIZE_BUCKET_FOOTPRINT["medium"])
 
 
 def _size_multiplier(size_bucket: str) -> float:
+    """Multiplier for heuristic mode (base footprint * mult)."""
     b = str(size_bucket).lower().strip()
     mapping = {
-    "tiny": 0.70,
-    "small": 0.90,
-    "medium": 1.00,
-    "large": 1.35,
-    "huge": 1.70,
+        "tiny": 0.45,
+        "small": 0.75,
+        "medium": 1.00,
+        "large": 1.70,
+        "huge": 2.40,
     }
     return float(mapping.get(b, 1.00))
 
 # -----------------------------
 # Helpers
 # -----------------------------
+
+def tile_size_world_from_rect(rect: dict, tiles: int) -> float:
+    w = float(rect["w"]); h = float(rect["h"])
+    tiles = max(1, int(tiles))
+    return min(w, h) / float(tiles)
+
+def entity_tile_rect_to_world(rect: dict, tiles: int, p: dict) -> dict:
+    x0, y0 = float(rect["x"]), float(rect["y"])
+    ts = tile_size_world_from_rect(rect, tiles)
+    return {
+        "x": x0 + float(p["x"]) * ts,
+        "y": y0 + float(p["y"]) * ts,
+        "w": float(p["w"]) * ts,
+        "h": float(p["h"]) * ts,
+        "kind": p.get("kind"),
+        "group": p.get("group"),
+        "id": p.get("id"),
+        "needs_frontage": bool(p.get("needs_frontage", False)),
+    }
+
+def tile_xy_to_world_xy(rect: dict, tiles: int, tx: float, ty: float) -> list[float]:
+    x0, y0 = float(rect["x"]), float(rect["y"])
+    ts = tile_size_world_from_rect(rect, tiles)
+    return [x0 + float(tx) * ts, y0 + float(ty) * ts]
 
 def load_json(path: str) -> Any:
     if not os.path.exists(path):
@@ -237,22 +282,8 @@ def _edge_t_from_point(rect, px, py):
 # Plan parsing
 # -----------------------------
 
-def _infer_footprint_tiles(kind: str, area_tiles_hint: int) -> Tuple[float, float]:
-    k = kind.lower()
-    if "tower" in k or "wind_turb" in k or "chimney" in k:
-        return (6, 10)
-    if "bridge" in k:
-        return (8, 4)
-    if "gate" in k:
-        return (4, 4)
-    if "shrine" in k or "altar" in k or "marker" in k or "statue" in k:
-        return (5, 5)
-    if "hut" in k or "house" in k or "cabin" in k or "shed" in k:
-        return (6, 6)
-    if "pond" in k or "spring" in k:
-        return (7, 7)
-    if "tree" in k or "boulder" in k or "rock" in k:
-        return (4, 4)
+def _default_footprint_tiles(area_tiles_hint: int) -> Tuple[float, float]:
+    """Default base footprint when LLM does not provide w_tiles/h_tiles (e.g. heuristic mode)."""
     base = max(4, int(area_tiles_hint * 0.08))
     return (base, base)
 
@@ -309,7 +340,7 @@ def expand_instances_from_plan(plan: Dict[str, Any], area_id: str, area_tiles_hi
         except Exception:
             count = 1
 
-        w, h = _infer_footprint_tiles(kind, area_tiles_hint)
+        w, h = _default_footprint_tiles(area_tiles_hint)
 
         for i in range(1, count + 1):
             inst_id = f"{group}_{i}" if count > 1 else group
@@ -461,6 +492,11 @@ def heuristic_intent(instances: List[Instance]) -> Dict[str, Dict[str, Any]]:
 
     ranked = sorted(instances, key=score, reverse=True)
 
+    # Residential buildings (houses, dwellings) must get at least medium so they don't end up 3×3
+    def _is_residential(inst: Instance) -> bool:
+        grp = (inst.group or "").lower()
+        return "house" in grp or "dwelling" in grp or "home" in grp or "residential" in grp
+
     for idx, inst in enumerate(ranked):
         d = DIRS[idx % len(DIRS)]
         dist_bucket = ["tiny", "small", "medium", "large"][min(3, idx // 4)]
@@ -473,6 +509,10 @@ def heuristic_intent(instances: List[Instance]) -> Dict[str, Dict[str, Any]]:
             size_bucket = "medium"
         else:
             size_bucket = "small"
+
+        # Residential entities get at least medium so footprint is plausible (e.g. 6×6 base → 6×6 or 5×5)
+        if _is_residential(inst) and _size_multiplier(size_bucket) < _size_multiplier("medium"):
+            size_bucket = "medium"
 
         k = inst.kind
         needs_frontage = any(t in k for t in ["market", "shop", "inn", "dock", "gate", "warehouse", "stall", "tavern"])
@@ -509,7 +549,7 @@ def _call_openai_for_intent(
     valid_ids = set(ids)
 
     entities_compact = [
-        {"id": i.id, "kind": i.kind, "w_tiles_base": i.w, "h_tiles_base": i.h}
+        {"id": i.id, "kind": i.kind, "group": i.group, "w_tiles_base": i.w, "h_tiles_base": i.h}
         for i in instances
     ]
 
@@ -518,7 +558,8 @@ def _call_openai_for_intent(
         "You do NOT output coordinates. "
         "For each entity, output: relative_to, dir, dist_bucket, size_bucket, needs_frontage. "
         "The 'anchor' is an abstract center point. "
-        "size_bucket controls footprint (tiny/small/medium/large/huge). "
+        "size_bucket controls footprint: tiny (small objects like bells, markers, statues), small, medium (e.g. houses, shops), large, huge (landmarks, temples). "
+        "Choose size_bucket from the entity's kind/group (e.g. houses at least medium, statues tiny or small, towers large). "
         "Set needs_frontage=true for entities that should connect to roads/paths (shops, markets, docks, inns, etc). "
         "Use varied dist_bucket and size_bucket so things don't cluster or look same-sized."
     )
@@ -1164,11 +1205,12 @@ def place_area(
 
     anchor = (tiles * 0.5, tiles * 0.5)
 
-    # place largest first for stability
+    # place largest first for stability (footprint from size_bucket -> exact w,h)
     def area_score(inst: Instance) -> float:
-        sb = (intent.get(inst.id) or {}).get("size_bucket", "medium")
-        mult = _size_multiplier(sb)
-        return (inst.w * inst.h) * mult
+        it = intent.get(inst.id) or {}
+        sb = it.get("size_bucket", "medium")
+        w, h = _size_bucket_to_footprint(sb)
+        return w * h
 
     ordered = sorted(instances, key=area_score, reverse=True)
 
@@ -1194,11 +1236,9 @@ def place_area(
 
     for inst in ordered:
         it = intent.get(inst.id) or {}
+        # LLM only gives size_bucket (tiny/small/medium/large/huge); we map to exact w, h
         sb = it.get("size_bucket", "medium")
-        mult = _size_multiplier(sb)
-
-        w = float(inst.w) * mult
-        h = float(inst.h) * mult
+        w, h = _size_bucket_to_footprint(sb)
         w = max(2.0, min(w, tiles - 2.0))
         h = max(2.0, min(h, tiles - 2.0))
 
@@ -1250,6 +1290,56 @@ def place_area(
             return None
 
     return placements
+
+
+def normalize_group_sizes(intent: Dict[str, Dict[str, Any]], instances: List[Instance]) -> Dict[str, Dict[str, Any]]:
+    """
+    Normalize size_bucket for all instances with the same group.
+    Uses the BIGGEST size_bucket per group (largest footprint).
+    This ensures consistent footprints: all "inn" buildings have same size across areas.
+    The normalized sizes are written to placements JSON and used in PNG rendering.
+    """
+    # Group instances by group name
+    group_to_instances: Dict[str, List[str]] = {}
+    for inst in instances:
+        group = inst.group
+        if group not in group_to_instances:
+            group_to_instances[group] = []
+        group_to_instances[group].append(inst.id)
+    
+    # For each group, find the BIGGEST size_bucket (by footprint area)
+    group_to_size_bucket: Dict[str, str] = {}
+    for group, inst_ids in group_to_instances.items():
+        seen_buckets: set[str] = set()
+        for inst_id in inst_ids:
+            it = intent.get(inst_id, {})
+            sb = str(it.get("size_bucket", "medium")).lower().strip()
+            if sb not in SIZE_BUCKETS:
+                sb = "medium"
+            seen_buckets.add(sb)
+        
+        # Pick the biggest bucket by footprint area (w * h)
+        if seen_buckets:
+            best_sb = max(seen_buckets, key=lambda sb: SIZE_BUCKET_FOOTPRINT.get(sb, SIZE_BUCKET_FOOTPRINT["medium"])[0] * SIZE_BUCKET_FOOTPRINT.get(sb, SIZE_BUCKET_FOOTPRINT["medium"])[1])
+        else:
+            best_sb = "medium"
+        group_to_size_bucket[group] = best_sb
+    
+    # Apply normalized size_bucket to all instances in each group
+    normalized_intent = dict(intent)
+    for group, inst_ids in group_to_instances.items():
+        normalized_sb = group_to_size_bucket[group]
+        for inst_id in inst_ids:
+            if inst_id not in normalized_intent:
+                normalized_intent[inst_id] = {}
+            normalized_intent[inst_id]["size_bucket"] = normalized_sb
+            # Preserve other intent fields
+            if inst_id in intent:
+                for k, v in intent[inst_id].items():
+                    if k != "size_bucket":
+                        normalized_intent[inst_id][k] = v
+    
+    return normalized_intent
 
 
 def grow_until_fit(instances: List[Instance], start_tiles: int, intent: Dict[str, Dict[str, Any]]) -> Tuple[int, Dict[str, Dict[str, Any]]]:
@@ -1515,6 +1605,10 @@ def sync_wgl_gates_and_connections(wgl: dict, area_layouts: dict, eps: float = 2
     wgl["connections"] = conns
 
 def draw_world(wgl: Dict[str, Any], area_layouts: Dict[str, Any], out_png: str, out_pdf: str) -> None:
+    if not HAS_MPL:
+        print("[warn] matplotlib not installed; skipping PNG/PDF drawing.")
+        return
+
     areas = wgl.get("areas", {})
     if not areas:
         print("[warn] No areas found in WGL; nothing to draw.")
@@ -1815,6 +1909,35 @@ def build_area_roads(area_layout: dict, blocked_pad: int = 1) -> dict:
         "total_terminals": int(len(ordered_terms) + 1),  # +1 for anchor connect attempt
         "blocked_pad": int(blocked_pad),
     }
+def tile_size_world_from_rect(rect: dict, tiles: int) -> float:
+    w = float(rect["w"])
+    h = float(rect["h"])
+    tiles = max(1, int(tiles))
+    return min(w, h) / float(tiles)
+
+
+def entity_tile_rect_to_world(rect: dict, tiles: int, p: dict) -> dict:
+    x0, y0 = float(rect["x"]), float(rect["y"])
+    ts = tile_size_world_from_rect(rect, tiles)
+    return {
+        "x": x0 + float(p["x"]) * ts,
+        "y": y0 + float(p["y"]) * ts,
+        "w": float(p["w"]) * ts,
+        "h": float(p["h"]) * ts,
+        "kind": p.get("kind"),
+        "group": p.get("group"),
+        "id": p.get("id"),
+        "needs_frontage": bool(p.get("needs_frontage", False)),
+    }
+
+
+def tile_xy_to_world_xy(rect: dict, tiles: int, tx: float, ty: float, center: bool = False) -> list[float]:
+    x0, y0 = float(rect["x"]), float(rect["y"])
+    ts = tile_size_world_from_rect(rect, tiles)
+    if center:
+        return [x0 + (float(tx) + 0.5) * ts, y0 + (float(ty) + 0.5) * ts]
+    return [x0 + float(tx) * ts, y0 + float(ty) * ts]
+
 
 
 # -----------------------------
@@ -1824,7 +1947,10 @@ def build_area_roads(area_layout: dict, blocked_pad: int = 1) -> dict:
 def main() -> None:
     plan = load_json(PLAN_PATH)
     wgl = load_json(WGL_PATH)
+
+    # Ensure connections are split through blocking areas BEFORE we place/optimize gates.
     split_connections_through_areas(wgl)
+
     areas = wgl.get("areas", {})
 
     # PLAN/WGL consistency check
@@ -1856,6 +1982,9 @@ def main() -> None:
 
     area_layouts: Dict[str, Any] = {}
 
+    # NEW: self-contained world-space export for Godot / PNG replication
+    world_space: Dict[str, Any] = {"areas": {}, "connections": []}
+
     for area_id, a in areas.items():
         rect = normalize_rect(a.get("rect", {}))
         a["rect"] = rect
@@ -1876,6 +2005,11 @@ def main() -> None:
             )
 
         intent = get_intent(instances=instances, area_id=area_id, gates_summary=gates_summary)
+        
+        # Normalize size_bucket per group: all instances with same group use same size_bucket
+        # This ensures consistent footprints across areas (e.g., all "inn" buildings same size)
+        intent = normalize_group_sizes(intent, instances)
+        
         tiles, placements = grow_until_fit(instances=instances, start_tiles=start_tiles, intent=intent)
 
         x0, y0, w, h = float(rect["x"]), float(rect["y"]), float(rect["w"]), float(rect["h"])
@@ -1908,7 +2042,7 @@ def main() -> None:
         }
 
         # -----------------------------
-        # NEW: Build roads and slide gates
+        # Build roads and slide gates
         # -----------------------------
         roads = build_area_roads(area_layouts[area_id])
         area_layouts[area_id]["roads"] = roads
@@ -1917,7 +2051,7 @@ def main() -> None:
         if roads.get("gates_opt"):
             area_layouts[area_id]["gates"] = roads["gates_opt"]
 
-            # IMPORTANT: recompute world_x/world_y after t changes
+            # recompute world_x/world_y after t changes
             new_gates_world: List[Dict[str, Any]] = []
             for g in area_layouts[area_id]["gates"]:
                 edge = g.get("edge", "top")
@@ -1928,7 +2062,54 @@ def main() -> None:
                 g2["world_y"] = float(gy)
                 new_gates_world.append(g2)
             area_layouts[area_id]["gates"] = new_gates_world
+
+        # -----------------------------
+        # NEW: World-space snapshot (self-contained)
+        # -----------------------------
+        ts_world = tile_size_world_from_rect(rect, tiles)
+
+        entities_world: Dict[str, Any] = {}
+        for ent_id, p in (placements or {}).items():
+            entities_world[ent_id] = entity_tile_rect_to_world(rect, tiles, p)
+
+        roads_obj = area_layouts[area_id].get("roads") or {}
+        road_tiles = roads_obj.get("road_tiles") or []
+        roads_world = [tile_xy_to_world_xy(rect, tiles, tx, ty, center=True) for (tx, ty) in road_tiles]
+
+        gates_world = []
+        for g in (area_layouts[area_id].get("gates") or []):
+            gates_world.append(
+                {
+                    "edge": g.get("edge", "top"),
+                    "t": float(g.get("t", 0.5)),
+                    "world_x": float(g.get("world_x", 0.0)),
+                    "world_y": float(g.get("world_y", 0.0)),
+                    "connect_to": g.get("connect_to"),
+                }
+            )
+
+        world_space["areas"][area_id] = {
+            "rect": {"x": float(rect["x"]), "y": float(rect["y"]), "w": float(rect["w"]), "h": float(rect["h"])},
+            "tiles": int(tiles),
+            "tile_size_world": float(ts_world),
+            "anchor_world": area_layouts[area_id].get("anchor_world"),
+            "gates_world": gates_world,
+            "entities_world": entities_world,
+            "roads_world": roads_world,
+        }
+
+    # Snap WGL's gates + connections to the moved gates so the PNG and exported connections match
     sync_wgl_gates_and_connections(wgl, area_layouts)
+
+    # Export exactly what draw_world uses for inter-area connections (world space)
+    conns_world = []
+    for c in wgl.get("connections", []) or []:
+        ga = (c.get("gate_a") or c.get("from_gate") or {})
+        gb = (c.get("gate_b") or c.get("to_gate") or {})
+        if "x" in ga and "y" in ga and "x" in gb and "y" in gb:
+            conns_world.append({"a": [float(ga["x"]), float(ga["y"])], "b": [float(gb["x"]), float(gb["y"])]})
+    world_space["connections"] = conns_world
+
     out = {
         "meta": {
             "plan_path": PLAN_PATH,
@@ -1939,7 +2120,8 @@ def main() -> None:
             "entity_padding_tiles": GLOBAL_ENTITY_PADDING_TILES,
             "growth_factor": GROWTH_FACTOR,
         },
-        "areas": area_layouts,
+        "areas": area_layouts,          # tile-space + intent + debugging
+        "world_space": world_space,     # NEW: self-contained snapshot for Godot / PNG replication
     }
 
     save_json(OUT_JSON, out)

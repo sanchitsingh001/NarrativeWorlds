@@ -1,0 +1,22 @@
+
+# --- Don't push generated models / renders / import artifacts ---
+*.glb
+*.png
+*.import
+
+# Godot cache / temp
+.godot/
+.import/
+.export/
+.mono/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Generated outputs (optional but recommended)
+mesh_dir/renders/
+godot_world/models_used/
+godot_world/generated/*.tmp

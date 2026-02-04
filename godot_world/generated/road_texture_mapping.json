@@ -1,0 +1,32 @@
+{
+  "foggy_village_center": {
+    "texture_key": "old_road",
+    "texture_path": "res://roads/old_road_omch20_2k/Old_Road_omCh20_2K_BaseColor.jpg",
+    "folder": "old_road_omch20_2k",
+    "basecolor_file": "Old_Road_omCh20_2K_BaseColor.jpg"
+  },
+  "soul_grove": {
+    "texture_key": "old_road",
+    "texture_path": "res://roads/old_road_omch20_2k/Old_Road_omCh20_2K_BaseColor.jpg",
+    "folder": "old_road_omch20_2k",
+    "basecolor_file": "Old_Road_omCh20_2K_BaseColor.jpg"
+  },
+  "cathedral_exterior": {
+    "texture_key": "stone_road",
+    "texture_path": "res://roads/m_stone_road_2k/T_Stone_Road_BaseColor.png",
+    "folder": "m_stone_road_2k",
+    "basecolor_file": "T_Stone_Road_BaseColor.png"
+  },
+  "cathedral_interior": {
+    "texture_key": "stone_road",
+    "texture_path": "res://roads/m_stone_road_2k/T_Stone_Road_BaseColor.png",
+    "folder": "m_stone_road_2k",
+    "basecolor_file": "T_Stone_Road_BaseColor.png"
+  },
+  "market_alley": {
+    "texture_key": "asphalt_fresh",
+    "texture_path": "res://roads/asphalt_fresh_sfrofg0a_2k/Asphalt_Fresh_sfrofg0a_2K_BaseColor.jpg",
+    "folder": "asphalt_fresh_sfrofg0a_2k",
+    "basecolor_file": "Asphalt_Fresh_sfrofg0a_2K_BaseColor.jpg"
+  }
+}

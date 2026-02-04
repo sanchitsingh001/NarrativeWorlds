@@ -1,0 +1,2436 @@
+{
+  "meta": {
+    "plan_path": "world_plan.json",
+    "wgl_path": "world_graph_layout.json",
+    "use_llm": true,
+    "openai_model": "gpt-4o",
+    "seed": 7,
+    "entity_padding_tiles": 1.5,
+    "growth_factor": 1.25
+  },
+  "areas": {
+    "ancient_stone_road": {
+      "tiles": 16,
+      "tile_size": [
+        16,
+        16
+      ],
+      "anchor_hint": null,
+      "anchor_world": [
+        0.06416033701215906,
+        2.2734728693491504
+      ],
+      "gates": [
+        {
+          "edge": "bottom",
+          "t": 0.6,
+          "world_x": 0.274160337012159,
+          "world_y": 1.2234728693491503,
+          "connect_to": null
+        },
+        {
+          "edge": "right",
+          "t": 0.4666666666666667,
+          "world_x": 1.114160337012159,
+          "world_y": 2.2034728693491505,
+          "connect_to": null
+        },
+        {
+          "edge": "left",
+          "t": 0.5333333333333333,
+          "world_x": -0.985839662987841,
+          "world_y": 2.3434728693491507,
+          "connect_to": null
+        }
+      ],
+      "placements": {
+        "ancient_watchtower": {
+          "id": "ancient_watchtower",
+          "kind": "building",
+          "group": "ancient_watchtower",
+          "x": 0.0,
+          "y": 9.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "abandoned_inn": {
+          "id": "abandoned_inn",
+          "kind": "building",
+          "group": "abandoned_inn",
+          "x": 11.0,
+          "y": 0.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": true
+        },
+        "traveler_rest_house": {
+          "id": "traveler_rest_house",
+          "kind": "building",
+          "group": "traveler_rest_house",
+          "x": 11.0,
+          "y": 8.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": true
+        },
+        "roadside_shrine": {
+          "id": "roadside_shrine",
+          "kind": "landmark",
+          "group": "roadside_shrine",
+          "x": 0.0,
+          "y": 0.0,
+          "w": 3.0,
+          "h": 3.0,
+          "needs_frontage": false
+        },
+        "old_milestone": {
+          "id": "old_milestone",
+          "kind": "landmark",
+          "group": "old_milestone",
+          "x": 6.962857567943798,
+          "y": 5.138054370600013,
+          "w": 2.0,
+          "h": 2.0,
+          "needs_frontage": false
+        },
+        "stone_marker": {
+          "id": "stone_marker",
+          "kind": "landmark",
+          "group": "stone_marker",
+          "x": 3.25,
+          "y": 5.5,
+          "w": 2.0,
+          "h": 2.0,
+          "needs_frontage": false
+        }
+      },
+      "intent": {
+        "ancient_watchtower": {
+          "relative_to": "anchor",
+          "dir": "NW",
+          "dist_bucket": "medium",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "old_milestone": {
+          "relative_to": "anchor",
+          "dir": "E",
+          "dist_bucket": "small",
+          "size_bucket": "tiny",
+          "needs_frontage": false
+        },
+        "abandoned_inn": {
+          "relative_to": "anchor",
+          "dir": "SE",
+          "dist_bucket": "large",
+          "size_bucket": "medium",
+          "needs_frontage": true
+        },
+        "roadside_shrine": {
+          "relative_to": "anchor",
+          "dir": "SW",
+          "dist_bucket": "medium",
+          "size_bucket": "small",
+          "needs_frontage": false
+        },
+        "traveler_rest_house": {
+          "relative_to": "abandoned_inn",
+          "dir": "N",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": true
+        },
+        "stone_marker": {
+          "relative_to": "roadside_shrine",
+          "dir": "NE",
+          "dist_bucket": "tiny",
+          "size_bucket": "tiny",
+          "needs_frontage": false
+        }
+      },
+      "roads": {
+        "anchor_tile": [
+          8,
+          8
+        ],
+        "terminals": [
+          [
+            9,
+            1
+          ],
+          [
+            14,
+            7
+          ],
+          [
+            1,
+            8
+          ],
+          [
+            11,
+            5
+          ],
+          [
+            10,
+            8
+          ]
+        ],
+        "doors": {
+          "abandoned_inn": [
+            11,
+            5
+          ],
+          "traveler_rest_house": [
+            10,
+            8
+          ]
+        },
+        "road_tiles": [
+          [
+            1,
+            8
+          ],
+          [
+            2,
+            8
+          ],
+          [
+            3,
+            8
+          ],
+          [
+            4,
+            8
+          ],
+          [
+            5,
+            8
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            7,
+            8
+          ],
+          [
+            8,
+            8
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            9,
+            3
+          ],
+          [
+            9,
+            4
+          ],
+          [
+            9,
+            5
+          ],
+          [
+            9,
+            6
+          ],
+          [
+            9,
+            7
+          ],
+          [
+            9,
+            8
+          ],
+          [
+            10,
+            5
+          ],
+          [
+            10,
+            7
+          ],
+          [
+            10,
+            8
+          ],
+          [
+            11,
+            5
+          ],
+          [
+            11,
+            7
+          ],
+          [
+            12,
+            7
+          ],
+          [
+            13,
+            7
+          ],
+          [
+            14,
+            7
+          ]
+        ],
+        "gates_opt": [
+          {
+            "edge": "bottom",
+            "t": 0.6,
+            "world_x": 0.03774137471303485,
+            "world_y": 1.2234728693491503,
+            "connect_to": null
+          },
+          {
+            "edge": "right",
+            "t": 0.4666666666666667,
+            "world_x": 1.114160337012159,
+            "world_y": 2.1315660040941116,
+            "connect_to": null
+          },
+          {
+            "edge": "left",
+            "t": 0.5333333333333333,
+            "world_x": -0.985839662987841,
+            "world_y": 2.9958692872851884,
+            "connect_to": null
+          }
+        ],
+        "connected_terminals": 4,
+        "total_terminals": 6,
+        "blocked_pad": 1
+      }
+    },
+    "abandoned_watchtower": {
+      "tiles": 16,
+      "tile_size": [
+        16,
+        16
+      ],
+      "anchor_hint": null,
+      "anchor_world": [
+        2.087272488543305,
+        2.0000504850794725
+      ],
+      "gates": [
+        {
+          "edge": "left",
+          "t": 0.4,
+          "world_x": 1.4872724885433048,
+          "world_y": 1.8800504850794724,
+          "connect_to": null
+        }
+      ],
+      "placements": {
+        "abandoned_watchtower": {
+          "id": "abandoned_watchtower",
+          "kind": "building",
+          "group": "abandoned_watchtower",
+          "x": 9.0,
+          "y": 0.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "old_shrine": {
+          "id": "old_shrine",
+          "kind": "landmark",
+          "group": "old_shrine",
+          "x": 5.5,
+          "y": 11.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "weathered_statue": {
+          "id": "weathered_statue",
+          "kind": "landmark",
+          "group": "weathered_statue",
+          "x": 2.0,
+          "y": 7.5,
+          "w": 2.0,
+          "h": 2.0,
+          "needs_frontage": false
+        }
+      },
+      "intent": {
+        "abandoned_watchtower": {
+          "relative_to": "anchor",
+          "dir": "SE",
+          "dist_bucket": "medium",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "old_shrine": {
+          "relative_to": "anchor",
+          "dir": "N",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "weathered_statue": {
+          "relative_to": "old_shrine",
+          "dir": "SW",
+          "dist_bucket": "tiny",
+          "size_bucket": "tiny",
+          "needs_frontage": false
+        }
+      },
+      "roads": {
+        "anchor_tile": [
+          8,
+          8
+        ],
+        "terminals": [
+          [
+            1,
+            6
+          ]
+        ],
+        "doors": {},
+        "road_tiles": [
+          [
+            1,
+            6
+          ],
+          [
+            2,
+            6
+          ],
+          [
+            3,
+            6
+          ],
+          [
+            4,
+            6
+          ],
+          [
+            5,
+            6
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            6,
+            7
+          ],
+          [
+            6,
+            8
+          ],
+          [
+            7,
+            8
+          ],
+          [
+            8,
+            8
+          ]
+        ],
+        "gates_opt": [
+          {
+            "edge": "left",
+            "t": 0.4,
+            "world_x": 1.4872724885433048,
+            "world_y": 2.081140122368066,
+            "connect_to": null
+          }
+        ],
+        "connected_terminals": 1,
+        "total_terminals": 2,
+        "blocked_pad": 1
+      }
+    },
+    "deserted_market_square": {
+      "tiles": 32,
+      "tile_size": [
+        32,
+        32
+      ],
+      "anchor_hint": null,
+      "anchor_world": [
+        -2.235839662987841,
+        3.8558650229233287
+      ],
+      "gates": [
+        {
+          "edge": "right",
+          "t": 0.6774193548387096,
+          "world_x": -1.435839662987841,
+          "world_y": 4.139735990665264,
+          "connect_to": null
+        },
+        {
+          "edge": "bottom",
+          "t": 0.6451612903225806,
+          "world_x": -2.003581598471712,
+          "world_y": 3.055865022923329,
+          "connect_to": null
+        }
+      ],
+      "placements": {
+        "abandoned_inn": {
+          "id": "abandoned_inn",
+          "kind": "building",
+          "group": "abandoned_inn",
+          "x": 24.0,
+          "y": 1.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": true
+        },
+        "fountain_landmark": {
+          "id": "fountain_landmark",
+          "kind": "landmark",
+          "group": "fountain_landmark",
+          "x": 12.5,
+          "y": 7.5,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "merchant_hall": {
+          "id": "merchant_hall",
+          "kind": "building",
+          "group": "merchant_hall",
+          "x": 3.3881904382951387,
+          "y": 3.1076206163098448,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": true
+        },
+        "stone_house_1": {
+          "id": "stone_house_1",
+          "kind": "building",
+          "group": "stone_house",
+          "x": 13.5,
+          "y": 25.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "stone_house_2": {
+          "id": "stone_house_2",
+          "kind": "building",
+          "group": "stone_house",
+          "x": 21.5,
+          "y": 27.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "stone_house_3": {
+          "id": "stone_house_3",
+          "kind": "building",
+          "group": "stone_house",
+          "x": 5.5,
+          "y": 27.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "shingled_tavern": {
+          "id": "shingled_tavern",
+          "kind": "building",
+          "group": "shingled_tavern",
+          "x": 21.5,
+          "y": 13.5,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": true
+        },
+        "wooden_house_1": {
+          "id": "wooden_house_1",
+          "kind": "building",
+          "group": "wooden_house",
+          "x": 2.0,
+          "y": 13.5,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "wooden_house_2": {
+          "id": "wooden_house_2",
+          "kind": "building",
+          "group": "wooden_house",
+          "x": 0.0,
+          "y": 20.36616245235679,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        }
+      },
+      "intent": {
+        "stone_house_1": {
+          "relative_to": "anchor",
+          "dir": "N",
+          "dist_bucket": "medium",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "stone_house_2": {
+          "relative_to": "stone_house_1",
+          "dir": "NE",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "stone_house_3": {
+          "relative_to": "stone_house_1",
+          "dir": "NW",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "shingled_tavern": {
+          "relative_to": "anchor",
+          "dir": "E",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": true
+        },
+        "abandoned_inn": {
+          "relative_to": "shingled_tavern",
+          "dir": "SE",
+          "dist_bucket": "medium",
+          "size_bucket": "large",
+          "needs_frontage": true
+        },
+        "fountain_landmark": {
+          "relative_to": "anchor",
+          "dir": "S",
+          "dist_bucket": "tiny",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "merchant_hall": {
+          "relative_to": "fountain_landmark",
+          "dir": "S",
+          "dist_bucket": "small",
+          "size_bucket": "large",
+          "needs_frontage": true
+        },
+        "wooden_house_1": {
+          "relative_to": "anchor",
+          "dir": "W",
+          "dist_bucket": "medium",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "wooden_house_2": {
+          "relative_to": "wooden_house_1",
+          "dir": "SW",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        }
+      },
+      "roads": {
+        "anchor_tile": [
+          16,
+          16
+        ],
+        "terminals": [
+          [
+            30,
+            21
+          ],
+          [
+            20,
+            1
+          ],
+          [
+            24,
+            8
+          ],
+          [
+            10,
+            11
+          ],
+          [
+            20,
+            16
+          ]
+        ],
+        "doors": {
+          "abandoned_inn": [
+            24,
+            8
+          ],
+          "merchant_hall": [
+            10,
+            11
+          ],
+          "shingled_tavern": [
+            20,
+            16
+          ]
+        },
+        "road_tiles": [
+          [
+            10,
+            11
+          ],
+          [
+            10,
+            12
+          ],
+          [
+            10,
+            13
+          ],
+          [
+            10,
+            14
+          ],
+          [
+            10,
+            15
+          ],
+          [
+            11,
+            15
+          ],
+          [
+            12,
+            15
+          ],
+          [
+            13,
+            15
+          ],
+          [
+            14,
+            15
+          ],
+          [
+            15,
+            15
+          ],
+          [
+            16,
+            15
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            17,
+            15
+          ],
+          [
+            18,
+            15
+          ],
+          [
+            19,
+            15
+          ],
+          [
+            20,
+            1
+          ],
+          [
+            20,
+            2
+          ],
+          [
+            20,
+            3
+          ],
+          [
+            20,
+            4
+          ],
+          [
+            20,
+            10
+          ],
+          [
+            20,
+            11
+          ],
+          [
+            20,
+            12
+          ],
+          [
+            20,
+            13
+          ],
+          [
+            20,
+            14
+          ],
+          [
+            20,
+            15
+          ],
+          [
+            20,
+            16
+          ],
+          [
+            21,
+            4
+          ],
+          [
+            21,
+            5
+          ],
+          [
+            21,
+            6
+          ],
+          [
+            21,
+            7
+          ],
+          [
+            21,
+            8
+          ],
+          [
+            21,
+            9
+          ],
+          [
+            21,
+            10
+          ],
+          [
+            22,
+            10
+          ],
+          [
+            23,
+            10
+          ],
+          [
+            24,
+            8
+          ],
+          [
+            24,
+            9
+          ],
+          [
+            24,
+            10
+          ],
+          [
+            25,
+            10
+          ],
+          [
+            26,
+            10
+          ],
+          [
+            27,
+            10
+          ],
+          [
+            28,
+            10
+          ],
+          [
+            29,
+            10
+          ],
+          [
+            29,
+            11
+          ],
+          [
+            29,
+            12
+          ],
+          [
+            29,
+            13
+          ],
+          [
+            29,
+            14
+          ],
+          [
+            29,
+            15
+          ],
+          [
+            29,
+            16
+          ],
+          [
+            29,
+            17
+          ],
+          [
+            29,
+            18
+          ],
+          [
+            29,
+            19
+          ],
+          [
+            29,
+            20
+          ],
+          [
+            29,
+            21
+          ],
+          [
+            30,
+            21
+          ]
+        ],
+        "gates_opt": [
+          {
+            "edge": "right",
+            "t": 0.6774193548387096,
+            "world_x": -1.435839662987841,
+            "world_y": 3.305467752114919,
+            "connect_to": null
+          },
+          {
+            "edge": "bottom",
+            "t": 0.6451612903225806,
+            "world_x": -2.144718233417208,
+            "world_y": 3.055865022923329,
+            "connect_to": null
+          }
+        ],
+        "connected_terminals": 5,
+        "total_terminals": 6,
+        "blocked_pad": 1
+      }
+    },
+    "shrine_ruins": {
+      "tiles": 25,
+      "tile_size": [
+        25,
+        25
+      ],
+      "anchor_hint": null,
+      "anchor_world": [
+        -2.025121357105752,
+        2.005865022923329
+      ],
+      "gates": [
+        {
+          "edge": "top",
+          "t": 0.3333333333333333,
+          "world_x": -2.225121357105752,
+          "world_y": 2.605865022923329,
+          "connect_to": null
+        }
+      ],
+      "placements": {
+        "crumbling_stone_pillars_1": {
+          "id": "crumbling_stone_pillars_1",
+          "kind": "landmark",
+          "group": "crumbling_stone_pillars",
+          "x": 9.0,
+          "y": 18.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "crumbling_stone_pillars_2": {
+          "id": "crumbling_stone_pillars_2",
+          "kind": "landmark",
+          "group": "crumbling_stone_pillars",
+          "x": 18.0,
+          "y": 18.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "central_granite_altar": {
+          "id": "central_granite_altar",
+          "kind": "landmark",
+          "group": "central_granite_altar",
+          "x": 9.0,
+          "y": 1.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "broken_statue_1": {
+          "id": "broken_statue_1",
+          "kind": "landmark",
+          "group": "broken_statue",
+          "x": 18.1,
+          "y": 3.0,
+          "w": 3.0,
+          "h": 3.0,
+          "needs_frontage": false
+        },
+        "broken_statue_2": {
+          "id": "broken_statue_2",
+          "kind": "landmark",
+          "group": "broken_statue",
+          "x": 4.181346652052679,
+          "y": 4.05,
+          "w": 3.0,
+          "h": 3.0,
+          "needs_frontage": false
+        }
+      },
+      "intent": {
+        "crumbling_stone_pillars_1": {
+          "relative_to": "anchor",
+          "dir": "N",
+          "dist_bucket": "medium",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "crumbling_stone_pillars_2": {
+          "relative_to": "crumbling_stone_pillars_1",
+          "dir": "NE",
+          "dist_bucket": "small",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "central_granite_altar": {
+          "relative_to": "anchor",
+          "dir": "S",
+          "dist_bucket": "small",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "broken_statue_1": {
+          "relative_to": "central_granite_altar",
+          "dir": "E",
+          "dist_bucket": "tiny",
+          "size_bucket": "small",
+          "needs_frontage": false
+        },
+        "broken_statue_2": {
+          "relative_to": "central_granite_altar",
+          "dir": "W",
+          "dist_bucket": "tiny",
+          "size_bucket": "small",
+          "needs_frontage": false
+        }
+      },
+      "roads": {
+        "anchor_tile": [
+          12,
+          12
+        ],
+        "terminals": [
+          [
+            8,
+            23
+          ]
+        ],
+        "doors": {},
+        "road_tiles": [
+          [
+            8,
+            12
+          ],
+          [
+            8,
+            13
+          ],
+          [
+            8,
+            14
+          ],
+          [
+            8,
+            15
+          ],
+          [
+            8,
+            16
+          ],
+          [
+            8,
+            17
+          ],
+          [
+            8,
+            18
+          ],
+          [
+            8,
+            19
+          ],
+          [
+            8,
+            20
+          ],
+          [
+            8,
+            21
+          ],
+          [
+            8,
+            22
+          ],
+          [
+            8,
+            23
+          ],
+          [
+            9,
+            12
+          ],
+          [
+            10,
+            12
+          ],
+          [
+            11,
+            12
+          ],
+          [
+            12,
+            12
+          ]
+        ],
+        "gates_opt": [
+          {
+            "edge": "top",
+            "t": 0.3333333333333333,
+            "world_x": -2.093462429283727,
+            "world_y": 2.605865022923329,
+            "connect_to": null
+          }
+        ],
+        "connected_terminals": 1,
+        "total_terminals": 2,
+        "blocked_pad": 1
+      }
+    },
+    "forgotten_village_remnants": {
+      "tiles": 25,
+      "tile_size": [
+        25,
+        25
+      ],
+      "anchor_hint": null,
+      "anchor_world": [
+        0.0,
+        -0.2765271306508499
+      ],
+      "gates": [
+        {
+          "edge": "top",
+          "t": 0.5833333333333334,
+          "world_x": 0.17500000000000004,
+          "world_y": 0.7734728693491502,
+          "connect_to": null
+        }
+      ],
+      "placements": {
+        "village_inn_ruins": {
+          "id": "village_inn_ruins",
+          "kind": "building",
+          "group": "village_inn_ruins",
+          "x": 9.0,
+          "y": 0.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": true
+        },
+        "old_barn": {
+          "id": "old_barn",
+          "kind": "building",
+          "group": "old_barn",
+          "x": 18.0,
+          "y": 0.0,
+          "w": 7.0,
+          "h": 7.0,
+          "needs_frontage": false
+        },
+        "dilapidated_cottage_1": {
+          "id": "dilapidated_cottage_1",
+          "kind": "building",
+          "group": "dilapidated_cottage",
+          "x": 0.0,
+          "y": 20.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "dilapidated_cottage_2": {
+          "id": "dilapidated_cottage_2",
+          "kind": "building",
+          "group": "dilapidated_cottage",
+          "x": 8.0,
+          "y": 20.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "dilapidated_cottage_3": {
+          "id": "dilapidated_cottage_3",
+          "kind": "building",
+          "group": "dilapidated_cottage",
+          "x": 16.0,
+          "y": 12.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "abandoned_storehouse_1": {
+          "id": "abandoned_storehouse_1",
+          "kind": "building",
+          "group": "abandoned_storehouse",
+          "x": 0.0,
+          "y": 0.0,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "abandoned_storehouse_2": {
+          "id": "abandoned_storehouse_2",
+          "kind": "building",
+          "group": "abandoned_storehouse",
+          "x": 1.7634404986270962,
+          "y": 7.650967305818572,
+          "w": 5.0,
+          "h": 5.0,
+          "needs_frontage": false
+        },
+        "central_well": {
+          "id": "central_well",
+          "kind": "landmark",
+          "group": "central_well",
+          "x": 10.257537879754125,
+          "y": 15.257537879754125,
+          "w": 3.0,
+          "h": 3.0,
+          "needs_frontage": false
+        },
+        "ancient_statue": {
+          "id": "ancient_statue",
+          "kind": "landmark",
+          "group": "ancient_statue",
+          "x": 16.684588862878968,
+          "y": 18.610707428639586,
+          "w": 2.0,
+          "h": 2.0,
+          "needs_frontage": false
+        }
+      },
+      "intent": {
+        "dilapidated_cottage_1": {
+          "relative_to": "anchor",
+          "dir": "NW",
+          "dist_bucket": "medium",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "dilapidated_cottage_2": {
+          "relative_to": "dilapidated_cottage_1",
+          "dir": "E",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "dilapidated_cottage_3": {
+          "relative_to": "dilapidated_cottage_2",
+          "dir": "SE",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "abandoned_storehouse_1": {
+          "relative_to": "anchor",
+          "dir": "SW",
+          "dist_bucket": "medium",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "abandoned_storehouse_2": {
+          "relative_to": "abandoned_storehouse_1",
+          "dir": "S",
+          "dist_bucket": "small",
+          "size_bucket": "medium",
+          "needs_frontage": false
+        },
+        "village_inn_ruins": {
+          "relative_to": "anchor",
+          "dir": "S",
+          "dist_bucket": "large",
+          "size_bucket": "large",
+          "needs_frontage": true
+        },
+        "central_well": {
+          "relative_to": "anchor",
+          "dir": "N",
+          "dist_bucket": "tiny",
+          "size_bucket": "small",
+          "needs_frontage": false
+        },
+        "old_barn": {
+          "relative_to": "anchor",
+          "dir": "SE",
+          "dist_bucket": "large",
+          "size_bucket": "large",
+          "needs_frontage": false
+        },
+        "ancient_statue": {
+          "relative_to": "central_well",
+          "dir": "E",
+          "dist_bucket": "tiny",
+          "size_bucket": "tiny",
+          "needs_frontage": false
+        }
+      },
+      "roads": {
+        "anchor_tile": [
+          12,
+          12
+        ],
+        "terminals": [
+          [
+            14,
+            23
+          ],
+          [
+            12,
+            7
+          ]
+        ],
+        "doors": {
+          "village_inn_ruins": [
+            12,
+            7
+          ]
+        },
+        "road_tiles": [
+          [
+            12,
+            7
+          ],
+          [
+            12,
+            8
+          ],
+          [
+            12,
+            9
+          ],
+          [
+            12,
+            10
+          ],
+          [
+            12,
+            11
+          ],
+          [
+            12,
+            12
+          ],
+          [
+            13,
+            12
+          ],
+          [
+            13,
+            13
+          ],
+          [
+            13,
+            14
+          ],
+          [
+            14,
+            14
+          ],
+          [
+            14,
+            15
+          ],
+          [
+            14,
+            16
+          ],
+          [
+            14,
+            17
+          ],
+          [
+            14,
+            18
+          ],
+          [
+            14,
+            19
+          ],
+          [
+            14,
+            20
+          ],
+          [
+            14,
+            21
+          ],
+          [
+            14,
+            22
+          ],
+          [
+            14,
+            23
+          ]
+        ],
+        "gates_opt": [
+          {
+            "edge": "top",
+            "t": 0.5833333333333334,
+            "world_x": 0.026418962299124216,
+            "world_y": 0.7734728693491502,
+            "connect_to": null
+          }
+        ],
+        "connected_terminals": 2,
+        "total_terminals": 3,
+        "blocked_pad": 1
+      }
+    }
+  },
+  "world_space": {
+    "areas": {
+      "ancient_stone_road": {
+        "rect": {
+          "x": -0.985839662987841,
+          "y": 1.2234728693491503,
+          "w": 2.1,
+          "h": 2.1000000000000005
+        },
+        "tiles": 16,
+        "tile_size_world": 0.13125,
+        "anchor_world": [
+          0.06416033701215906,
+          2.2734728693491504
+        ],
+        "gates_world": [
+          {
+            "edge": "bottom",
+            "t": 0.6,
+            "world_x": 0.274160337012159,
+            "world_y": 1.2234728693491503,
+            "connect_to": null
+          },
+          {
+            "edge": "right",
+            "t": 0.4666666666666667,
+            "world_x": 1.114160337012159,
+            "world_y": 2.2034728693491505,
+            "connect_to": null
+          },
+          {
+            "edge": "left",
+            "t": 0.5333333333333333,
+            "world_x": -0.985839662987841,
+            "world_y": 2.3434728693491507,
+            "connect_to": null
+          }
+        ],
+        "entities_world": {
+          "ancient_watchtower": {
+            "x": -0.985839662987841,
+            "y": 2.4047228693491505,
+            "w": 0.9187500000000001,
+            "h": 0.9187500000000001,
+            "kind": "building",
+            "group": "ancient_watchtower",
+            "id": "ancient_watchtower",
+            "needs_frontage": false
+          },
+          "abandoned_inn": {
+            "x": 0.4579103370121591,
+            "y": 1.2234728693491503,
+            "w": 0.65625,
+            "h": 0.65625,
+            "kind": "building",
+            "group": "abandoned_inn",
+            "id": "abandoned_inn",
+            "needs_frontage": true
+          },
+          "traveler_rest_house": {
+            "x": 0.4579103370121591,
+            "y": 2.2734728693491504,
+            "w": 0.65625,
+            "h": 0.65625,
+            "kind": "building",
+            "group": "traveler_rest_house",
+            "id": "traveler_rest_house",
+            "needs_frontage": true
+          },
+          "roadside_shrine": {
+            "x": -0.985839662987841,
+            "y": 1.2234728693491503,
+            "w": 0.39375000000000004,
+            "h": 0.39375000000000004,
+            "kind": "landmark",
+            "group": "roadside_shrine",
+            "id": "roadside_shrine",
+            "needs_frontage": false
+          },
+          "old_milestone": {
+            "x": -0.07196460719521747,
+            "y": 1.8978425054904022,
+            "w": 0.2625,
+            "h": 0.2625,
+            "kind": "landmark",
+            "group": "old_milestone",
+            "id": "old_milestone",
+            "needs_frontage": false
+          },
+          "stone_marker": {
+            "x": -0.559277162987841,
+            "y": 1.9453478693491504,
+            "w": 0.2625,
+            "h": 0.2625,
+            "kind": "landmark",
+            "group": "stone_marker",
+            "id": "stone_marker",
+            "needs_frontage": false
+          }
+        },
+        "roads_world": [
+          [
+            -0.788964662987841,
+            2.3390978693491506
+          ],
+          [
+            -0.657714662987841,
+            2.3390978693491506
+          ],
+          [
+            -0.5264646629878409,
+            2.3390978693491506
+          ],
+          [
+            -0.3952146629878409,
+            2.3390978693491506
+          ],
+          [
+            -0.26396466298784094,
+            2.3390978693491506
+          ],
+          [
+            -0.13271466298784096,
+            2.3390978693491506
+          ],
+          [
+            -0.0014646629878409811,
+            2.3390978693491506
+          ],
+          [
+            0.1297853370121591,
+            2.3390978693491506
+          ],
+          [
+            0.261035337012159,
+            1.4203478693491505
+          ],
+          [
+            0.261035337012159,
+            1.5515978693491503
+          ],
+          [
+            0.261035337012159,
+            1.6828478693491504
+          ],
+          [
+            0.261035337012159,
+            1.8140978693491503
+          ],
+          [
+            0.261035337012159,
+            1.9453478693491504
+          ],
+          [
+            0.261035337012159,
+            2.0765978693491505
+          ],
+          [
+            0.261035337012159,
+            2.20784786934915
+          ],
+          [
+            0.261035337012159,
+            2.3390978693491506
+          ],
+          [
+            0.39228533701215906,
+            1.9453478693491504
+          ],
+          [
+            0.39228533701215906,
+            2.20784786934915
+          ],
+          [
+            0.39228533701215906,
+            2.3390978693491506
+          ],
+          [
+            0.5235353370121592,
+            1.9453478693491504
+          ],
+          [
+            0.5235353370121592,
+            2.20784786934915
+          ],
+          [
+            0.654785337012159,
+            2.20784786934915
+          ],
+          [
+            0.7860353370121591,
+            2.20784786934915
+          ],
+          [
+            0.9172853370121592,
+            2.20784786934915
+          ]
+        ]
+      },
+      "abandoned_watchtower": {
+        "rect": {
+          "x": 1.4872724885433048,
+          "y": 1.4000504850794724,
+          "w": 1.2000000000000002,
+          "h": 1.2000000000000002
+        },
+        "tiles": 16,
+        "tile_size_world": 0.07500000000000001,
+        "anchor_world": [
+          2.087272488543305,
+          2.0000504850794725
+        ],
+        "gates_world": [
+          {
+            "edge": "left",
+            "t": 0.4,
+            "world_x": 1.4872724885433048,
+            "world_y": 1.8800504850794724,
+            "connect_to": null
+          }
+        ],
+        "entities_world": {
+          "abandoned_watchtower": {
+            "x": 2.162272488543305,
+            "y": 1.4000504850794724,
+            "w": 0.5250000000000001,
+            "h": 0.5250000000000001,
+            "kind": "building",
+            "group": "abandoned_watchtower",
+            "id": "abandoned_watchtower",
+            "needs_frontage": false
+          },
+          "old_shrine": {
+            "x": 1.899772488543305,
+            "y": 2.2250504850794726,
+            "w": 0.37500000000000006,
+            "h": 0.37500000000000006,
+            "kind": "landmark",
+            "group": "old_shrine",
+            "id": "old_shrine",
+            "needs_frontage": false
+          },
+          "weathered_statue": {
+            "x": 1.6372724885433048,
+            "y": 1.9625504850794724,
+            "w": 0.15000000000000002,
+            "h": 0.15000000000000002,
+            "kind": "landmark",
+            "group": "weathered_statue",
+            "id": "weathered_statue",
+            "needs_frontage": false
+          }
+        },
+        "roads_world": [
+          [
+            1.599772488543305,
+            1.8875504850794724
+          ],
+          [
+            1.6747724885433048,
+            1.8875504850794724
+          ],
+          [
+            1.749772488543305,
+            1.8875504850794724
+          ],
+          [
+            1.8247724885433048,
+            1.8875504850794724
+          ],
+          [
+            1.899772488543305,
+            1.8875504850794724
+          ],
+          [
+            1.974772488543305,
+            1.8875504850794724
+          ],
+          [
+            1.974772488543305,
+            1.9625504850794724
+          ],
+          [
+            1.974772488543305,
+            2.0375504850794726
+          ],
+          [
+            2.049772488543305,
+            2.0375504850794726
+          ],
+          [
+            2.124772488543305,
+            2.0375504850794726
+          ]
+        ]
+      },
+      "deserted_market_square": {
+        "rect": {
+          "x": -3.035839662987841,
+          "y": 3.055865022923329,
+          "w": 1.5999999999999999,
+          "h": 1.6000000000000005
+        },
+        "tiles": 32,
+        "tile_size_world": 0.049999999999999996,
+        "anchor_world": [
+          -2.235839662987841,
+          3.8558650229233287
+        ],
+        "gates_world": [
+          {
+            "edge": "right",
+            "t": 0.6774193548387096,
+            "world_x": -1.435839662987841,
+            "world_y": 4.139735990665264,
+            "connect_to": null
+          },
+          {
+            "edge": "bottom",
+            "t": 0.6451612903225806,
+            "world_x": -2.003581598471712,
+            "world_y": 3.055865022923329,
+            "connect_to": null
+          }
+        ],
+        "entities_world": {
+          "abandoned_inn": {
+            "x": -1.8358396629878408,
+            "y": 3.1058650229233287,
+            "w": 0.35,
+            "h": 0.35,
+            "kind": "building",
+            "group": "abandoned_inn",
+            "id": "abandoned_inn",
+            "needs_frontage": true
+          },
+          "fountain_landmark": {
+            "x": -2.410839662987841,
+            "y": 3.430865022923329,
+            "w": 0.35,
+            "h": 0.35,
+            "kind": "landmark",
+            "group": "fountain_landmark",
+            "id": "fountain_landmark",
+            "needs_frontage": false
+          },
+          "merchant_hall": {
+            "x": -2.8664301410730837,
+            "y": 3.211246053738821,
+            "w": 0.35,
+            "h": 0.35,
+            "kind": "building",
+            "group": "merchant_hall",
+            "id": "merchant_hall",
+            "needs_frontage": true
+          },
+          "stone_house_1": {
+            "x": -2.360839662987841,
+            "y": 4.305865022923329,
+            "w": 0.24999999999999997,
+            "h": 0.24999999999999997,
+            "kind": "building",
+            "group": "stone_house",
+            "id": "stone_house_1",
+            "needs_frontage": false
+          },
+          "stone_house_2": {
+            "x": -1.9608396629878408,
+            "y": 4.4058650229233285,
+            "w": 0.24999999999999997,
+            "h": 0.24999999999999997,
+            "kind": "building",
+            "group": "stone_house",
+            "id": "stone_house_2",
+            "needs_frontage": false
+          },
+          "stone_house_3": {
+            "x": -2.760839662987841,
+            "y": 4.4058650229233285,
+            "w": 0.24999999999999997,
+            "h": 0.24999999999999997,
+            "kind": "building",
+            "group": "stone_house",
+            "id": "stone_house_3",
+            "needs_frontage": false
+          },
+          "shingled_tavern": {
+            "x": -1.9608396629878408,
+            "y": 3.7308650229233287,
+            "w": 0.24999999999999997,
+            "h": 0.24999999999999997,
+            "kind": "building",
+            "group": "shingled_tavern",
+            "id": "shingled_tavern",
+            "needs_frontage": true
+          },
+          "wooden_house_1": {
+            "x": -2.9358396629878407,
+            "y": 3.7308650229233287,
+            "w": 0.24999999999999997,
+            "h": 0.24999999999999997,
+            "kind": "building",
+            "group": "wooden_house",
+            "id": "wooden_house_1",
+            "needs_frontage": false
+          },
+          "wooden_house_2": {
+            "x": -3.035839662987841,
+            "y": 4.0741731455411685,
+            "w": 0.24999999999999997,
+            "h": 0.24999999999999997,
+            "kind": "building",
+            "group": "wooden_house",
+            "id": "wooden_house_2",
+            "needs_frontage": false
+          }
+        },
+        "roads_world": [
+          [
+            -2.510839662987841,
+            3.630865022923329
+          ],
+          [
+            -2.510839662987841,
+            3.680865022923329
+          ],
+          [
+            -2.510839662987841,
+            3.7308650229233287
+          ],
+          [
+            -2.510839662987841,
+            3.780865022923329
+          ],
+          [
+            -2.510839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.4608396629878406,
+            3.8308650229233288
+          ],
+          [
+            -2.410839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.360839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.3108396629878407,
+            3.8308650229233288
+          ],
+          [
+            -2.260839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.2108396629878406,
+            3.8308650229233288
+          ],
+          [
+            -2.2108396629878406,
+            3.880865022923329
+          ],
+          [
+            -2.160839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.110839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.060839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.010839662987841,
+            3.130865022923329
+          ],
+          [
+            -2.010839662987841,
+            3.180865022923329
+          ],
+          [
+            -2.010839662987841,
+            3.2308650229233287
+          ],
+          [
+            -2.010839662987841,
+            3.280865022923329
+          ],
+          [
+            -2.010839662987841,
+            3.5808650229233288
+          ],
+          [
+            -2.010839662987841,
+            3.630865022923329
+          ],
+          [
+            -2.010839662987841,
+            3.680865022923329
+          ],
+          [
+            -2.010839662987841,
+            3.7308650229233287
+          ],
+          [
+            -2.010839662987841,
+            3.780865022923329
+          ],
+          [
+            -2.010839662987841,
+            3.8308650229233288
+          ],
+          [
+            -2.010839662987841,
+            3.880865022923329
+          ],
+          [
+            -1.9608396629878408,
+            3.280865022923329
+          ],
+          [
+            -1.9608396629878408,
+            3.3308650229233288
+          ],
+          [
+            -1.9608396629878408,
+            3.380865022923329
+          ],
+          [
+            -1.9608396629878408,
+            3.430865022923329
+          ],
+          [
+            -1.9608396629878408,
+            3.4808650229233287
+          ],
+          [
+            -1.9608396629878408,
+            3.530865022923329
+          ],
+          [
+            -1.9608396629878408,
+            3.5808650229233288
+          ],
+          [
+            -1.9108396629878408,
+            3.5808650229233288
+          ],
+          [
+            -1.860839662987841,
+            3.5808650229233288
+          ],
+          [
+            -1.810839662987841,
+            3.4808650229233287
+          ],
+          [
+            -1.810839662987841,
+            3.530865022923329
+          ],
+          [
+            -1.810839662987841,
+            3.5808650229233288
+          ],
+          [
+            -1.760839662987841,
+            3.5808650229233288
+          ],
+          [
+            -1.7108396629878408,
+            3.5808650229233288
+          ],
+          [
+            -1.660839662987841,
+            3.5808650229233288
+          ],
+          [
+            -1.610839662987841,
+            3.5808650229233288
+          ],
+          [
+            -1.560839662987841,
+            3.5808650229233288
+          ],
+          [
+            -1.560839662987841,
+            3.630865022923329
+          ],
+          [
+            -1.560839662987841,
+            3.680865022923329
+          ],
+          [
+            -1.560839662987841,
+            3.7308650229233287
+          ],
+          [
+            -1.560839662987841,
+            3.780865022923329
+          ],
+          [
+            -1.560839662987841,
+            3.8308650229233288
+          ],
+          [
+            -1.560839662987841,
+            3.880865022923329
+          ],
+          [
+            -1.560839662987841,
+            3.930865022923329
+          ],
+          [
+            -1.560839662987841,
+            3.9808650229233287
+          ],
+          [
+            -1.560839662987841,
+            4.0308650229233285
+          ],
+          [
+            -1.560839662987841,
+            4.080865022923328
+          ],
+          [
+            -1.560839662987841,
+            4.130865022923329
+          ],
+          [
+            -1.510839662987841,
+            4.130865022923329
+          ]
+        ]
+      },
+      "shrine_ruins": {
+        "rect": {
+          "x": -2.625121357105752,
+          "y": 1.405865022923329,
+          "w": 1.2000000000000002,
+          "h": 1.2000000000000002
+        },
+        "tiles": 25,
+        "tile_size_world": 0.04800000000000001,
+        "anchor_world": [
+          -2.025121357105752,
+          2.005865022923329
+        ],
+        "gates_world": [
+          {
+            "edge": "top",
+            "t": 0.3333333333333333,
+            "world_x": -2.225121357105752,
+            "world_y": 2.605865022923329,
+            "connect_to": null
+          }
+        ],
+        "entities_world": {
+          "crumbling_stone_pillars_1": {
+            "x": -2.193121357105752,
+            "y": 2.2698650229233293,
+            "w": 0.3360000000000001,
+            "h": 0.3360000000000001,
+            "kind": "landmark",
+            "group": "crumbling_stone_pillars",
+            "id": "crumbling_stone_pillars_1",
+            "needs_frontage": false
+          },
+          "crumbling_stone_pillars_2": {
+            "x": -1.761121357105752,
+            "y": 2.2698650229233293,
+            "w": 0.3360000000000001,
+            "h": 0.3360000000000001,
+            "kind": "landmark",
+            "group": "crumbling_stone_pillars",
+            "id": "crumbling_stone_pillars_2",
+            "needs_frontage": false
+          },
+          "central_granite_altar": {
+            "x": -2.193121357105752,
+            "y": 1.453865022923329,
+            "w": 0.3360000000000001,
+            "h": 0.3360000000000001,
+            "kind": "landmark",
+            "group": "central_granite_altar",
+            "id": "central_granite_altar",
+            "needs_frontage": false
+          },
+          "broken_statue_1": {
+            "x": -1.7563213571057519,
+            "y": 1.549865022923329,
+            "w": 0.14400000000000002,
+            "h": 0.14400000000000002,
+            "kind": "landmark",
+            "group": "broken_statue",
+            "id": "broken_statue_1",
+            "needs_frontage": false
+          },
+          "broken_statue_2": {
+            "x": -2.4244167178072233,
+            "y": 1.6002650229233288,
+            "w": 0.14400000000000002,
+            "h": 0.14400000000000002,
+            "kind": "landmark",
+            "group": "broken_statue",
+            "id": "broken_statue_2",
+            "needs_frontage": false
+          }
+        },
+        "roads_world": [
+          [
+            -2.217121357105752,
+            2.005865022923329
+          ],
+          [
+            -2.217121357105752,
+            2.053865022923329
+          ],
+          [
+            -2.217121357105752,
+            2.101865022923329
+          ],
+          [
+            -2.217121357105752,
+            2.149865022923329
+          ],
+          [
+            -2.217121357105752,
+            2.197865022923329
+          ],
+          [
+            -2.217121357105752,
+            2.2458650229233292
+          ],
+          [
+            -2.217121357105752,
+            2.2938650229233293
+          ],
+          [
+            -2.217121357105752,
+            2.3418650229233293
+          ],
+          [
+            -2.217121357105752,
+            2.3898650229233294
+          ],
+          [
+            -2.217121357105752,
+            2.4378650229233294
+          ],
+          [
+            -2.217121357105752,
+            2.485865022923329
+          ],
+          [
+            -2.217121357105752,
+            2.533865022923329
+          ],
+          [
+            -2.169121357105752,
+            2.005865022923329
+          ],
+          [
+            -2.121121357105752,
+            2.005865022923329
+          ],
+          [
+            -2.073121357105752,
+            2.005865022923329
+          ],
+          [
+            -2.025121357105752,
+            2.005865022923329
+          ]
+        ]
+      },
+      "forgotten_village_remnants": {
+        "rect": {
+          "x": -1.05,
+          "y": -1.32652713065085,
+          "w": 2.1,
+          "h": 2.1
+        },
+        "tiles": 25,
+        "tile_size_world": 0.084,
+        "anchor_world": [
+          0.0,
+          -0.2765271306508499
+        ],
+        "gates_world": [
+          {
+            "edge": "top",
+            "t": 0.5833333333333334,
+            "world_x": 0.17500000000000004,
+            "world_y": 0.7734728693491502,
+            "connect_to": null
+          }
+        ],
+        "entities_world": {
+          "village_inn_ruins": {
+            "x": -0.29400000000000004,
+            "y": -1.32652713065085,
+            "w": 0.5880000000000001,
+            "h": 0.5880000000000001,
+            "kind": "building",
+            "group": "village_inn_ruins",
+            "id": "village_inn_ruins",
+            "needs_frontage": true
+          },
+          "old_barn": {
+            "x": 0.46199999999999997,
+            "y": -1.32652713065085,
+            "w": 0.5880000000000001,
+            "h": 0.5880000000000001,
+            "kind": "building",
+            "group": "old_barn",
+            "id": "old_barn",
+            "needs_frontage": false
+          },
+          "dilapidated_cottage_1": {
+            "x": -1.05,
+            "y": 0.35347286934915023,
+            "w": 0.42000000000000004,
+            "h": 0.42000000000000004,
+            "kind": "building",
+            "group": "dilapidated_cottage",
+            "id": "dilapidated_cottage_1",
+            "needs_frontage": false
+          },
+          "dilapidated_cottage_2": {
+            "x": -0.378,
+            "y": 0.35347286934915023,
+            "w": 0.42000000000000004,
+            "h": 0.42000000000000004,
+            "kind": "building",
+            "group": "dilapidated_cottage",
+            "id": "dilapidated_cottage_2",
+            "needs_frontage": false
+          },
+          "dilapidated_cottage_3": {
+            "x": 0.29400000000000004,
+            "y": -0.3185271306508499,
+            "w": 0.42000000000000004,
+            "h": 0.42000000000000004,
+            "kind": "building",
+            "group": "dilapidated_cottage",
+            "id": "dilapidated_cottage_3",
+            "needs_frontage": false
+          },
+          "abandoned_storehouse_1": {
+            "x": -1.05,
+            "y": -1.32652713065085,
+            "w": 0.42000000000000004,
+            "h": 0.42000000000000004,
+            "kind": "building",
+            "group": "abandoned_storehouse",
+            "id": "abandoned_storehouse_1",
+            "needs_frontage": false
+          },
+          "abandoned_storehouse_2": {
+            "x": -0.9018709981153239,
+            "y": -0.6838458769620899,
+            "w": 0.42000000000000004,
+            "h": 0.42000000000000004,
+            "kind": "building",
+            "group": "abandoned_storehouse",
+            "id": "abandoned_storehouse_2",
+            "needs_frontage": false
+          },
+          "central_well": {
+            "x": -0.18836681810065348,
+            "y": -0.04489394875150343,
+            "w": 0.252,
+            "h": 0.252,
+            "kind": "landmark",
+            "group": "central_well",
+            "id": "central_well",
+            "needs_frontage": false
+          },
+          "ancient_statue": {
+            "x": 0.3515054644818334,
+            "y": 0.23677229335487526,
+            "w": 0.168,
+            "h": 0.168,
+            "kind": "landmark",
+            "group": "ancient_statue",
+            "id": "ancient_statue",
+            "needs_frontage": false
+          }
+        },
+        "roads_world": [
+          [
+            0.0,
+            -0.6965271306508499
+          ],
+          [
+            0.0,
+            -0.6125271306508498
+          ],
+          [
+            0.0,
+            -0.5285271306508499
+          ],
+          [
+            0.0,
+            -0.4445271306508499
+          ],
+          [
+            0.0,
+            -0.36052713065084985
+          ],
+          [
+            0.0,
+            -0.2765271306508499
+          ],
+          [
+            0.08400000000000007,
+            -0.2765271306508499
+          ],
+          [
+            0.08400000000000007,
+            -0.1925271306508498
+          ],
+          [
+            0.08400000000000007,
+            -0.10852713065084996
+          ],
+          [
+            0.16799999999999993,
+            -0.10852713065084996
+          ],
+          [
+            0.16799999999999993,
+            -0.024527130650849882
+          ],
+          [
+            0.16799999999999993,
+            0.05947286934915019
+          ],
+          [
+            0.16799999999999993,
+            0.14347286934915027
+          ],
+          [
+            0.16799999999999993,
+            0.22747286934915012
+          ],
+          [
+            0.16799999999999993,
+            0.3114728693491502
+          ],
+          [
+            0.16799999999999993,
+            0.39547286934915027
+          ],
+          [
+            0.16799999999999993,
+            0.4794728693491501
+          ],
+          [
+            0.16799999999999993,
+            0.5634728693491502
+          ],
+          [
+            0.16799999999999993,
+            0.6474728693491503
+          ]
+        ]
+      }
+    },
+    "connections": [
+      {
+        "a": [
+          0.274160337012159,
+          1.2234728693491503
+        ],
+        "b": [
+          0.17500000000000004,
+          0.7734728693491502
+        ]
+      },
+      {
+        "a": [
+          1.4872724885433048,
+          1.8800504850794724
+        ],
+        "b": [
+          1.114160337012159,
+          2.2034728693491505
+        ]
+      },
+      {
+        "a": [
+          -0.985839662987841,
+          2.3434728693491507
+        ],
+        "b": [
+          -2.003581598471712,
+          3.055865022923329
+        ]
+      },
+      {
+        "a": [
+          -2.003581598471712,
+          3.055865022923329
+        ],
+        "b": [
+          -2.225121357105752,
+          2.605865022923329
+        ]
+      }
+    ]
+  }
+}

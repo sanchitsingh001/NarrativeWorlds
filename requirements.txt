@@ -1,0 +1,9 @@
+openai==2.15.0
+tencentcloud-sdk-python-intl-en==3.1.32
+numpy==2.4.1
+matplotlib==3.10.8
+requests==2.32.5
+tqdm==4.67.1
+pillow==12.1.0
+networkx==3.6.1
+

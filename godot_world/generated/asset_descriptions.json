@@ -1,0 +1,277 @@
+{
+  "spell_shop": {
+    "visual_description": "a quaint, low-poly stall with a whimsical facade inspired by whimsical medieval architecture, constructed with weathered wood beams and moss-covered stone, the structure features a prominent thatched roof resembling an upside-down potion bottle with a pointed arched entrance, delicate ironwork sign hanging above etched with magical incantations, a front counter displaying glimmering potions and glowing scrolls, the stall's interior is visible from the outside, lined with shelves filled with scrolls, crystal orbs, and strange trinkets, walls adorned with hanging tapestries depicting arcane symbols, a warm, golden glow emanating from within, the colors dominated by deep purples, emerald greens, and mystical oranges, textures emphasizing the wood's grain and stone's roughness, stone steps leading up to the entrance with narrow byways connecting to adjacent stalls, flower petals scattered around the base, scent of incense wafting through the air.",
+    "style_keywords": [
+      "low poly",
+      "magical",
+      "medieval",
+      "weathered",
+      "mystical"
+    ],
+    "metadata": {
+      "tags": [
+        "magical",
+        "trading",
+        "spells"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "tool_repair_stall": {
+    "visual_description": "a compact, rectangular stall with a sloping wooden roof covered in tarnished metal sheets, weathered wood framing marked with tool scratches, a wide display counter cluttered with various tool elements, hanging sets of hammers and wrenches on the inside walls, a worn canvas canopy extending over the shopfront in muted earth tones, crates stacked alongside the stall containing metallic pliers and screwdrivers, wooden pegs embedded along the edges for hanging additional smaller tools, a large open toolbox prominently displayed in the pennant-marked entry, faded bunting strings above the stall fluttering gently, aged brass lantern hanging at the corner, a small iron anvil and vise attached to the counter edge, burn marks and scorch stains on the wooden surface, toolkit symbols engrained in the wood with a light touch of green and rust hues accentuating its aged and well-used aesthetic",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "weathered",
+      "game ready",
+      "bustling marketplace"
+    ],
+    "metadata": {
+      "tags": [
+        "tools",
+        "repair",
+        "craft"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "lantern_upgrade_shop": {
+    "visual_description": "The 'lantern_upgrade_shop' is a quaint, semi-open booth, centrally located in the bustling market alley, featuring a distinctive rustic village hut style with a blend of hurried marketplace bustle; the vending space is constructed primarily from weathered wood, which showcases a natural, grainy texture that complements the rugged cobblestone path upon which it sits. The stall's roof is an artful assembly of thatched leaves tightly bound by twine, forming a patchwork pattern that adds a homemade charm to its appearance, with frayed edges that tell tales of countless transactions. Colorful lanterns, in hues of warm gold, fiery orange, and muted teal, hang from sturdy hooks attached to wooden beams, each lantern meticulously crafted, displaying geometric etchings and tiny embellishments of rusted metal giving a vintage effect. The shop's counter is decorated with an assortment of gleaming tools, small gears, and colored glass fragments that hint at the crafting and upgrading services offered here, each instrument suitable for refining lanterns to withstand perilous nights. A large, intricately carved signpost rests atop the stall, depicting a glowing rune symbol of a lantern - the shop's emblem - set against a backdrop of faded red cloth infused with magic, flickering slightly as if alive, beckoning patrons from afar. This arrangement ensures the design is low poly, utilizing optimized geometry for efficient rendering in a game environment.",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "village",
+      "marketplace",
+      "weathered"
+    ],
+    "metadata": {
+      "tags": [
+        "lantern",
+        "upgrades",
+        "craft"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "flower_petals_stand": {
+    "visual_description": "flower_petals_stand, crafted in a rustic and earthy style, comprising a combination of aged wood and woven reed materials, exhibits an organically flowing yet structured design. The stand is adorned with a canopy made from vibrant, embroidered cloth in shades of deep maroon and amber, evoking a sense of warmth and vitality, adorned with dangling tassels that sway gently in the market breeze. Its surface is patched with intricate carvings depicting floral motifs, symbolizing its purpose as a purveyor of nature's bounty. The base is cylindrical, supported by artisan-crafted wrought iron legs that are slender yet robust, arranged in a circle for steadiness on the uneven cobblestone market floor. The tactile surface is lightly textured, mimicking the feel of natural bark, while the petals displayed are in a radiant spectrum of colors, prominently featuring shades of crimson, lilac, and sunny yellow, the petals themselves scattered and layered to create a visual feast for the senses, their delicate edges curling slightly as they dry in the afternoon sun.",
+    "style_keywords": [
+      "rustic",
+      "organic",
+      "low poly",
+      "game ready",
+      "vibrant market"
+    ],
+    "metadata": {
+      "tags": [
+        "flowers",
+        "scent",
+        "barter"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "spice_shop": {
+    "visual_description": "a compact, low poly spice shop located in a bustling medieval marketplace, wooden framework with lattice patterns inspired by Middle Eastern architecture, exterior crafted from adobe and accented with vibrant textiles, colors rich in earthy tones such as burnt umber, terracotta, and saffron yellow, a flat roof with a weathered wooden sign hanging overhead, stalls featuring intricately carved corner supports, open shelves brimming with burlap sacks and ornate clay pots filled with colorful spices, an overhead canopy of woven palm fronds, tassels and beads hanging from edges, ground covered with scattered bright flower petals, blending into the surrounding merchant stalls, narrow yet inviting entrance shaded by a maroon awning, textures emphasize natural roughness and craft, capturing the essence of a trade hub alive with the aroma and visual splendor of spices.",
+    "style_keywords": [
+      "low poly",
+      "medieval",
+      "marketplace",
+      "rustic",
+      "Middle Eastern architecture"
+    ],
+    "metadata": {
+      "tags": [
+        "spices",
+        "flavors",
+        "trade"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "home_above_shop": {
+    "visual_description": "a two-storey structure with the ground floor functioning as a shop and the upper level as a residence, the architectural style is a blend between traditional Asian and rustic with elements adapted to a bustling marketplace environment, wooden beams are prominently visible, with the shop level featuring large open archways held by carved wooden frames, the upper level includes small, neatly arranged windows with wooden shutters, walls are textured plaster with a warm beige hue, earthy tones are used throughout with red clay tiles covering the roof that extends slightly outward forming a protective canopy over the storefront, the shop exterior features hanging colorful cloth banners and dried herbs, while strings of lanterns add a warm, inviting glow in the evenings reflecting a vibrant market atmosphere, structural elements are slightly exaggerated but maintain practical dimensions, optimized for game environments with low poly detailing, textures are simplified yet suggestive of worn and weathered surfaces, suitable for a bustling market setting where vivid yet functional design prevails",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "marketplace",
+      "traditional Asian",
+      "earthy tones"
+    ],
+    "metadata": {
+      "tags": [
+        "residential",
+        "mixed-use"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "candle_maker": {
+    "visual_description": "a compact stall constructed from weathered wooden planks supported by sturdy wooden poles, the roof is thatched with woven reeds, providing a rustic charm, a narrow counter at the front displays an array of handmade candles: twisted beeswax, smooth soy, and deep-colored tallow varieties, the candles are arranged in ascending heights creating a visually appealing display, vibrant dyes of deep reds, yellows, and natural whites enhance the sensory appeal, a few candles emit a faint but mystical glow, suggesting magical properties, decorative symbols are carved into the counter's wood, echoing traditional folk patterns relevant to the region's crafting culture, the stall is adorned with colorful hanging cloths dyed in earthy tones, complementing the bustling and organic atmosphere of the marketplace, overall a low-poly aesthetic with simplified geometric shapes ensuring game readiness and seamless integration into a bustling market scene, optimized geometry for efficient rendering",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "folk architecture",
+      "weathered",
+      "organic"
+    ],
+    "metadata": {
+      "tags": [
+        "candles",
+        "light",
+        "craft"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "market_gate": {
+    "visual_description": "a grand archway forming the market entrance, arch crafted from weathered stone blocks with intricate carvings depicting trade and prosperity motifs, stone surface rugged with mossy patches highlighting its age and integration with nature, top of the arch adorned with vibrant banners in shades of red, yellow, and blue waving in the breeze, arch crowned with small ornate spires on either side framing a central lantern made from hammered brass casting a warm glow, wooden beams reinforce the structure providing strength and rustic charm, base flanked by stone pedestals holding small, jade-green planters overflowing with colorful flowers, entire structure presenting a harmonious blend of functionality and artistry embodying the welcoming spirit of a thriving marketplace",
+    "style_keywords": [
+      "low poly",
+      "medieval",
+      "weathered",
+      "bustling",
+      "game ready"
+    ],
+    "metadata": {
+      "tags": [
+        "entrance",
+        "landmark"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "ancient_banyan_tree": {
+    "visual_description": "The ancient banyan tree serves as a historical landmark within the bustling marketplace, its enormous canopy providing shade over the vibrant trade stalls. Characterized by graceful, sprawling branches cascading downward, the banyan displays thick, low poly trunks and branches that exhibit a simplified yet intricate looping form. Intertwined roots create a maze-like base, ideal for seating or a gathering spot beneath, signifying its role as a communal hub. The tree is covered in a low poly texture of rich brown bark with lighter grooves representing age and history, dotted with hanging moss and thick vines. Verdant green leaves, simplified for low poly styling, shimmer under the dappled light filtering through. The leaves have slight variations in color, ranging from dark forest green to hints of jade, ensuring a natural feel. The banyan's presence is both majestic and serene, accentuated by subtle engraved symbols on the roots, telling of the tree's storied past within the marketplace, indicating a place of heritage and legend. Surrounding the tree, colorful marketplace stalls, often decorated with hanging flower garlands and spices, bring vibrant splashes of reds, yellows, and oranges, contrasting yet harmonizing with the tree\u2019s earth tones, creating a magical market atmosphere.",
+    "style_keywords": [
+      "nature-fused",
+      "heritage",
+      "bustling marketplace",
+      "low poly",
+      "ancient"
+    ],
+    "metadata": {
+      "tags": [
+        "nature",
+        "heritage"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "street_lantern": {
+    "visual_description": "An ornate, low poly street lantern crafted to fit seamlessly into a bustling marketplace setting, its design inspired by medieval architecture and featuring a delicate blend of rustic and lively aesthetics, designed with an organically flowing structure to invoke the feeling of an animated and bustling environment. The lamp features a tall, weathered wrought iron post with intricate, swirling vine patterns wrapping around the length, providing cohesion with the vibrant and bustling market atmosphere. The top of the lantern is domed and constructed from warm, amber-hued glass panes that filter the light with a soft glow, mimicking the setting sun and illuminating nearby stalls in a cozy, inviting manner. The glass panels are embedded within aged brass frames, which have developed a subtle patina over time, enhancing the lantern's historical and artisanal charm. A small, ceremonial red cloth is tied just beneath the lantern\u2019s housing, swaying gently and symbolically connecting to local traditions or festivities, adding dynamic movement to the asset. Optimal for real-time game engines, this street lantern balances functionality and style through minimized polygons while retaining detailed elements for visual storytelling.",
+    "style_keywords": [
+      "medieval",
+      "low poly",
+      "rustic",
+      "artisanal",
+      "game ready"
+    ],
+    "metadata": {
+      "tags": [
+        "roadside",
+        "lamp",
+        "light"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "barrel_stack": {
+    "visual_description": "cylindrical barrels stacked in a loose pyramid formation, constructed of weathered, knotty wood with prominent grain texture, metal bands encircle each barrel, appearing tarnished and slightly rusted, a few barrels are tilted, adding dynamic realism, faint scent of spices suggested by slight coloring variations of subtle earth tones on surfaces, interspersed with deep brown hues, positioned among flower petals in vibrant pink and saffron, giving a lively impression as if ready for quick trade in market setting, each barrel emits a faint shadow due to the narrow alley lighting, lighting casts a warm afternoon glow highlighting rough edges, suggestive of a vibrant, bustling marketplace atmosphere, emphasizes utility and simplicity, embodying storied tales of trade and survival",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "marketplace",
+      "weathered",
+      "game ready"
+    ],
+    "metadata": {
+      "tags": [
+        "storage",
+        "props"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "merchant_cart": {
+    "visual_description": "low poly, game-ready, wooden frame structure with arched canopy, thatched with interwoven reed mats, compact rectangular shape, supported by robust, weathered wooden wheels for mobility, adorned with vibrant patches of fabric in colors of deep red, bright yellow, and royal blue, mismatched, aged wooden crates and woven baskets fastened with twine, panels decorated with faintly painted merchant symbols, hinting trade origins, handles crafted from brass and slightly tarnished, wheels reinforced with metallic rims, suggestive of long distances traveled, decorative hanging lanterns emitting a soft, warm glow attached to the canopy edges, scent of spice emanating from small clay pots embedded in the structure, signs of bustling trade evident in uneven surfaces of the cart, polished by constant handling, a lively yet pragmatic design emphasized by its purpose as a mobile trading prop",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "medieval",
+      "weathered",
+      "optimized"
+    ],
+    "metadata": {
+      "tags": [
+        "trading",
+        "mobile",
+        "props"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "wooden_bench": {
+    "visual_description": "low poly wooden bench, crafted from textured, weathered oak planks, bench has a slightly curved seating surface for comfort, backrest made of vertical wooden slats, sturdy yet simple construction, aged with time to display natural brown wood with lighter streaks, held together by rusty iron nails, legs are thick square posts, scuffed from repeated use, roadside dust settles on the surface, faint floral carvings run along the edges, hinting at their frequent proximity to flower stalls, integrates into a vibrant marketplace environment, inviting tired traders and travelers to pause and rest",
+    "style_keywords": [
+      "low poly",
+      "rustic",
+      "weathered",
+      "game ready",
+      "marketplace"
+    ],
+    "metadata": {
+      "tags": [
+        "rest",
+        "seating",
+        "roadside"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  },
+  "hanging_lantern": {
+    "visual_description": "hanging lantern, low poly, traditional Moroccan style, hexagonal lantern frame, crafted from weathered bronze with intricate openwork filigree patterns, glass panes in alternating shades of deep teal and amber, suspended by an ornate chain, the chain is rustic and slightly rusty, emits a warm yellow glow, frosted glass enhances the ambient light diffusion, small crescents and stars engraved into the frame, fits a bustling, rustic marketplace setting, subtly beveled edges on the panes for a hand-crafted look, suitable for roadside placement amidst a busy market alley",
+    "style_keywords": [
+      "low poly",
+      "game ready",
+      "rustic",
+      "Moroccan",
+      "marketplace"
+    ],
+    "metadata": {
+      "tags": [
+        "illuminated",
+        "roadside"
+      ],
+      "contexts": [
+        "market_alley"
+      ]
+    }
+  }
+}
