@@ -25,7 +25,7 @@ export OPENAI_API_KEY="YOUR_OPENAI_KEY"
 export TENCENTCLOUD_SECRET_ID="YOUR_TENCENT_ID"
 export TENCENTCLOUD_SECRET_KEY="YOUR_TENCENT_KEY"
 
-Optional: run Blender frontage detection (VLM)
+run Blender frontage detection (VLM)
 export RUN_FRONTAGE_BLENDER=1
 export DEEPINFRA_API_KEY="YOUR_DEEPINFRA_KEY"
 
