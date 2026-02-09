@@ -5,7 +5,7 @@ Use this with batch_blender.py --frontage_assets so those GLBs get front_yaw_deg
 and the game can orient them to face the path.
 
 Usage:
-  python mesh_dir/frontage_assets.py [--world path] [--models path] [--out path]
+  python mesh_dir/frontage_assets.py [--world path] [--models path] [--npc-models path] [--out path]
 
 Then:
   blender -b -P batch_blender.py -- glb_dir out_dir --ask_vlm --frontage_assets mesh_dir/frontage_assets.json
@@ -42,6 +42,11 @@ def main():
         help="Path to entity_models.json (entity_id -> res://path/to/model.glb)",
     )
     ap.add_argument(
+        "--npc-models",
+        default=os.path.join(project_root, "godot_world", "generated", "npc_models.json"),
+        help="Path to npc_models.json (npc_id -> res://path/to/model.glb); optional, skipped if missing",
+    )
+    ap.add_argument(
         "--out",
         default=os.path.join(script_dir, "frontage_assets.json"),
         help="Output JSON path (list of asset names)",
@@ -75,6 +80,19 @@ def main():
             name = asset_name_from_path(path)
             if name:
                 asset_names.add(name)
+
+    # Include NPC models so they get front_yaw_deg from VLM (optional; skip if file missing)
+    if os.path.isfile(args.npc_models):
+        with open(args.npc_models, "r") as f:
+            npc_models = json.load(f)
+        for path in npc_models.values():
+            if path:
+                name = asset_name_from_path(path)
+                if name:
+                    asset_names.add(name)
+        print("NPC models: %d added from %s" % (len(npc_models), args.npc_models))
+    else:
+        print("NPC models: skipped (file not found: %s)" % args.npc_models)
 
     out_list = sorted(asset_names)
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)

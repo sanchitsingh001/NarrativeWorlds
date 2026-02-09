@@ -137,6 +137,46 @@ AREA_ENTITIES_SCHEMA: Dict[str, Any] = {
     }
 }
 
+# NPC anchor planning: 4-8 NPCs, each with exactly one anchor entity in an existing outdoor area
+NPC_PLAN_SCHEMA: Dict[str, Any] = {
+    "name": "npc_plan",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "npcs": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 8,
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "npc_id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                        "display_name": {"type": "string"},
+                        "area_id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                        "anchor_entity": {
+                            "type": "object",
+                            "additionalProperties": False,
+                            "properties": {
+                                "id": {"type": "string", "pattern": "^[a-z0-9_]+$"},
+                                "kind": {"type": "string", "enum": ["building", "landmark"]},
+                                "type": {"type": "string"},
+                                "tags": {"type": "array", "items": {"type": "string"}}
+                            },
+                            "required": ["id", "kind", "type", "tags"]
+                        },
+                        "dialogue_seed": {"type": "string"},
+                        "description": {"type": "string"}
+                    },
+                    "required": ["npc_id", "display_name", "area_id", "anchor_entity", "dialogue_seed", "description"]
+                }
+            }
+        },
+        "required": ["npcs"]
+    }
+}
 
 AREALAYOUT_SCHEMA: Dict[str, Any] = {
     "name": "area_layout_v2",
@@ -466,6 +506,12 @@ You are a detail-oriented level designer populating an area for a tile/grid-base
 
 Step 2: Generate ONLY "solid footprint" entities for this area.
 
+AREA-NARRATIVE CONSTRAINT (CRITICAL):
+- Generate ONLY buildings and landmarks that belong to THIS area's narrative.
+- Do NOT include buildings or landmarks that are specific to OTHER areas (e.g. do not put a school building in the village center, or a bakery in the old man's area).
+- If the story mentions a school, bakery, or other named location, that building type should appear only in the area that corresponds to that location.
+- You MAY include generic filler buildings that match THIS area's architectural style and scale.
+
 CRITICAL HARD CONSTRAINTS (MUST FOLLOW):
 1) NO SCATTER AT ALL.
    - Do NOT output kind="scatter".
@@ -504,6 +550,27 @@ ARCHITECTURAL TAG REQUIREMENTS:
 - For landmarks: carved_stone, stone_pedestal, bronze, ornate, cracked, mossy, etc.
 
 Return ONLY JSON matching the schema.
+"""
+
+NPC_PLAN_INSTRUCTIONS = """\
+You are an NPC anchor planner for a procedural world. Output ONLY valid JSON matching the provided schema (no commentary).
+
+Input: (1) An enhanced story overview (string). (2) A list of areas, each with id (snake_case), narrative, and scale_hint.
+
+Constraints:
+- Produce 4 to 8 NPCs. Each NPC has exactly one anchor_entity.
+- area_id must be one of the given area IDs. Do NOT create new areas.
+- anchor_entity must be a placeable exterior: a building or landmark that can exist in an outdoor area (exterior structure, landmark, or outdoor prop). Use kind "building" or "landmark" only.
+- All areas are OUTDOOR only. If the story includes interior scenes, describe them only as "seen through windows/doors" or leave for dialogue/NARRATOR later. Do not introduce interior areas or indoor-only anchors.
+
+For each NPC provide: npc_id (snake_case), display_name, area_id (matching an area from the list), anchor_entity (id, kind, type, tags), dialogue_seed (short narrative seed for later dialogue), and description.
+
+DESCRIPTION (critical for text-to-3D): The description is passed directly to a text-to-3D character model. It must be visual, concrete, and suitable for generating a 3D character mesh.
+- Always include the character's role or type as a clear keyword so the 3D model generates the right archetype: e.g. doctor, baker, schoolteacher, child, gatekeeper, elderly man, woman in apron, etc.
+- In 2–4 sentences describe: (1) role/type keyword, (2) clothing and key visual traits (coat, apron, dress, simple clothes, cane, etc.), (3) age/build if relevant (elderly, middle-aged, small child, tall). Pose must always be standing only.
+- Examples: "Elderly man, gatekeeper; worn coat and cap, cane in hand; weathered face, standing." "Doctor in a clean white coat, tall and poised; piercing eyes, standing." "Baker, middle-aged woman in flour-dusted apron; kind eyes, standing." "Schoolteacher, stern woman in long formal dress; standing straight." "Child, small figure in simple clothes; wide eyes, clutching a book, standing."
+
+Return ONLY JSON that matches the provided JSON schema (strict).
 """
 
 AREALAYOUT_INSTRUCTIONS = """\
@@ -628,6 +695,24 @@ def connect(a: str, b: str, distance: str = "medium", kind: str = "road") -> Dic
         "kind": kind
     }
 
+def get_required_entities_for_area(npc_plan: List[Dict[str, Any]], area_id: str) -> List[Dict[str, Any]]:
+    """Return anchor_entity objects for the given area_id, with count: None for schema compliance."""
+    out: List[Dict[str, Any]] = []
+    for npc in npc_plan:
+        if npc.get("area_id") != area_id:
+            continue
+        anchor = npc.get("anchor_entity")
+        if not anchor:
+            continue
+        out.append({
+            "id": anchor["id"],
+            "kind": anchor["kind"],
+            "type": anchor["type"],
+            "tags": list(anchor.get("tags", [])),
+            "count": None,
+        })
+    return out
+
 def _call_structured(model: str, instructions: str, user_text: str, schema: Dict[str, Any]) -> Dict[str, Any]:
     resp = client.responses.create(
         model=model,
@@ -652,6 +737,20 @@ def make_world_plan(story_text: str, model: str = "gpt-4o") -> Dict[str, Any]:
     areas_list = narratives_data.get("areas", [])
     print(f"  -> Generated {len(areas_list)} areas.")
 
+    # 1b. NPC anchor plan (4-8 NPCs, each with exactly one anchor entity in an existing area)
+    print(f"Step 1b: Generating NPC anchor plan...")
+    npc_user_lines = ["STORY OVERVIEW:", story_text, "", "AREAS (id, narrative, scale_hint):"]
+    for a in areas_list:
+        npc_user_lines.append(f"- id: {a['id']}, scale_hint: {a.get('scale_hint', '')}, narrative: {a.get('narrative', '')[:200]}...")
+    npc_plan_result = _call_structured(
+        model=model,
+        instructions=NPC_PLAN_INSTRUCTIONS,
+        user_text="\n".join(npc_user_lines),
+        schema=NPC_PLAN_SCHEMA,
+    )
+    npc_plan = npc_plan_result["npcs"]
+    print(f"  -> Generated {len(npc_plan)} NPCs with anchor entities.")
+
     # 2. Generate Entities for each area
     final_areas = []
     
@@ -660,19 +759,65 @@ def make_world_plan(story_text: str, model: str = "gpt-4o") -> Dict[str, Any]:
         narrative = area.get("narrative", "")
         print(f"Step 2: Generating entities for '{area_id}'...")
         
-        # Call for entities
+        required_anchors = get_required_entities_for_area(npc_plan, area_id)
+        other_anchors = sorted(
+            set(
+                npc["anchor_entity"]["id"]
+                for npc in npc_plan
+                if npc.get("area_id") != area_id
+            )
+        )
+        user_lines = [
+            f"AREA ID: {area_id}",
+            f"NARRATIVE: {narrative}",
+            "",
+            "STORY CONTEXT:",
+            story_text,
+        ]
+        if other_anchors:
+            user_lines.extend([
+                "",
+                "DO NOT include these entity IDs (they are narrative buildings for other areas): " + ", ".join(other_anchors),
+            ])
+        if required_anchors:
+            user_lines.extend([
+                "",
+                "MUST INCLUDE (anchor entities for NPCs in this area — include these exactly):",
+            ])
+            for anc in required_anchors:
+                user_lines.append(f"- id={anc['id']}, kind={anc['kind']}, type={anc['type']}, tags={anc['tags']}")
+        
         entities_data = _call_structured(
             model=model,
             instructions=AREA_ENTITIES_INSTRUCTIONS,
-            user_text=f"AREA ID: {area_id}\nNARRATIVE: {narrative}\n\nSTORY CONTEXT:\n{story_text}",
+            user_text="\n".join(user_lines),
             schema=AREA_ENTITIES_SCHEMA,
         )
         
-        # Merge back
-        area["entities"] = entities_data.get("entities", [])
+        entities = entities_data.get("entities", [])
+        anchor_by_id = {a["id"]: a for a in required_anchors}
+        # Enforce anchors: overwrite existing or append missing
+        seen_ids = set()
+        result_entities: List[Dict[str, Any]] = []
+        for e in entities:
+            eid = e.get("id")
+            if eid in anchor_by_id:
+                result_entities.append(dict(anchor_by_id[eid]))
+                seen_ids.add(eid)
+            else:
+                result_entities.append(e)
+        for aid, anc in anchor_by_id.items():
+            if aid not in seen_ids:
+                result_entities.append(dict(anc))
+        
+        area["entities"] = result_entities
         final_areas.append(area)
         
-    return {"areas": final_areas}
+    return {"areas": final_areas, "npc_plan": npc_plan}
+
+def generate_dialogue_json(world_plan: Dict[str, Any], model: str) -> Dict[str, Any]:
+    """Placeholder. Will be implemented in DialogueGen.py later."""
+    raise NotImplementedError
 
 def make_area_layout(
     *,
@@ -1535,8 +1680,33 @@ def migrate_area_layout(layout: Dict[str, Any], area_role: str, area_tags: List[
 # Example usage
 if __name__ == "__main__":
     story = """
-The world is a vast, open stretch of ancient land shaped entirely by human presence. Stone roads connect scattered outposts, shrines, watch towers, and small settlements, each built where people once found purpose or safety. There are no natural landmarks to guide you—no rivers, forests, or mountains—only man-made paths, worn ground, and the remains of old structures that hint at forgotten lives. Every location exists to be explored through conversation, not combat or nature, and each NPC belongs to the world for a reason, with their own routines and histories. As you travel, the world feels empty yet intentional, inviting you to piece together its meaning by moving between places and listening to the people who still linger there.
-"""
+Phase 1: The Warm Welcome (0–5 Minutes)
+Everyone treats you like a local hero. The dialogue options are simple, but the NPCs' responses are slightly "off."
+* NPC: Old Man Miller (The Gatekeeper)
+* Dialogue: "Back so soon, Elias? The garden hasn't been the same since you... tidied it up."
+* Your Options: [Who are you?] / [I don't live here.] / [Where is my house?]
+* The Twist: If you say you don't live here, he laughs. "Always the joker. Just like your father before the accident."
+* NPC: Sarah (The Baker)
+* Dialogue: "I have your favorite loaf ready. No poppy seeds this time. We know how you get when you see small black dots."
+* The Horror: She hands you a "loaf," but in the game asset, it's just a grey, pulsating brick.
+Phase 2: The Cracks in the Mask (5–12 Minutes)
+As you walk deeper into the town, the environment starts to subtly change. Buildings look like they are made of cardboard. People begin to repeat your own thoughts.
+* NPC: The Schoolteacher
+* Dialogue: "Class is waiting, Elias. Why are you late?"
+* Your Options: [I'm not a student.] / [What class?]
+* The Reveal: She turns around. Her face is a mirror. You see your own character's face. "The class on Forgetting," she whispers.
+* Environmental Shift:
+The music transitions from a soft piano to a low, rhythmic thumping—like a heartbeat. Posters on the walls change from "Missing Person" to "Found: Elias" with a photo of a coffin.
+Phase 3: The Truth (12–18 Minutes)
+You finally reach "Home." It’s the only building that looks "real." An NPC is standing at the door—The Doctor.
+* The Doctor:
+* Dialogue: "You’ve done a full lap of the town, Elias. Do you remember why we built this place for you?"
+* The Choice: [I killed them, didn't I?] / [This is a prison.] / [I want to wake up.]
+* The Truth: The "town" is a memory palace constructed in your mind. You are in a psychiatric ward. The "walking" is you pacing in your cell. The NPCs are the ghosts of the people you couldn't save in a tragedy (a fire or a crash).
+Phase 4: The Ending (18–20 Minutes)
+You enter your "house." It’s just a white room with a single chair.
+* Final NPC (A Child): "Don't leave again, Elias. It's cold when you forget us."
+* The Mechanic: The screen starts to fade to white. The "Walk" speed slows down until you can't move at all."""
     wp = make_world_plan(story, model="gpt-4o")
     validate_world_plan_ids(wp)
 

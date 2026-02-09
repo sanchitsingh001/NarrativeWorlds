@@ -237,16 +237,19 @@ def ask_deepinfra_front(grid_path: str) -> str:
 
     url = "https://api.deepinfra.com/v1/openai/chat/completions"
     prompt = (
-        "You are given a 2x2 grid image of the same 3D building from four yaw directions.\n"
+        "You are given a 2x2 grid image of the same 3D structure from four yaw directions.\n"
         "Define panels by position:\n"
         "A = top-left, B = top-right, C = bottom-left, D = bottom-right.\n\n"
-        "Task: pick which panel shows the building's FRONT (entrance/main facade).\n"
+        "Task: Pick which panel shows the FRONT—the side where customers would approach.\n"
+        "- For stalls and shops: the side with the main product display, sales counter, or entrance.\n"
+        "- For buildings: the side with the main entrance or customer-facing facade.\n"
+        "- Avoid picking a blank wall, sign-back, or storage side.\n"
         "If the object is non-directional or you cannot tell, answer 'NONE'.\n\n"
         "Reply with ONLY one of: A, B, C, D, NONE.\n"
     )
 
     payload = {
-        "model": "meta-llama/Llama-3.2-11B-Vision-Instruct",
+        "model": "Qwen/Qwen2.5-VL-32B-Instruct",
         "max_tokens": 32,
         "messages": [{
             "role": "user",

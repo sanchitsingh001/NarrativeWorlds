@@ -24,14 +24,20 @@ const HEIGHT_SCALE := 1.0
 @export var area_layouts_path := "res://generated/area_layouts.json"
 @export var asset_metadata_path := "res://generated/asset_metadata.json"
 @export var entity_models_path := "res://generated/entity_models.json"
+@export var npc_models_path := "res://generated/npc_models.json"
+@export var world_plan_path := "res://generated/world_plan.json"
 @export var road_texture_mapping_path := "res://generated/road_texture_mapping.json"
 @export var debug_orientation: bool = false  # Log entity_facing_yaw, asset_front_yaw, rotation_yaw per placed entity
+@export var npc_model_scale: float = 1.5  # Scale NPC GLBs to human size (models ~1m, target ~1.7m)
 @export var normalize_group_sizes: bool = true  # Use fixed size per group (ignores layout w/h) for consistent footprints
 @export var group_size_overrides: Dictionary = {}  # group_name -> {"w": float, "h": float} (optional manual overrides)
+@export var use_mesh_collision_for_entities: bool = true  # Use convex hull from mesh for entity collision; if false or fails, use box
 
 var area_layouts := {}
 var asset_metadata := {}  # Maps asset name -> {front_yaw_deg, bbox_*}
 var entity_models := {}   # Maps Entity ID -> Model Path
+var npc_models := {}      # Maps npc_id -> Model Path (res://models_used/npc_<npc_id>.glb when 3D generated)
+var npc_plan: Array = []  # From world_plan.npc_plan: { npc_id, display_name, area_id, anchor_entity: { id } }
 var road_texture_mapping := {}  # Maps area_id -> {texture_path, ...}
 var normalized_group_sizes_cache := {}  # group_name -> {"w": float, "h": float} (computed once at load)
 
@@ -125,6 +131,13 @@ func _ready() -> void:
 	else:
 		entity_models = {}
 
+	# Load NPC model mapping (generated when 3D generation runs; missing/empty when skipped)
+	var npc_mod = _load_json(_resolve_path(npc_models_path))
+	if npc_mod != null and npc_mod is Dictionary:
+		npc_models = npc_mod
+	else:
+		npc_models = {}
+
 	# Load road texture mapping
 	var mapping = _load_json(_resolve_path(road_texture_mapping_path))
 	if mapping != null:
@@ -132,6 +145,17 @@ func _ready() -> void:
 		print("Loaded road texture mapping for ", road_texture_mapping.size(), " areas")
 	else:
 		road_texture_mapping = {}
+
+	# Load npc_plan from world_plan for NPC placement
+	var world_plan = _load_json(_resolve_path(world_plan_path))
+	if world_plan != null and world_plan.has("npc_plan"):
+		npc_plan = world_plan["npc_plan"]
+		if npc_plan is Array:
+			print("WorldLoader: Loaded npc_plan with ", npc_plan.size(), " NPCs")
+		else:
+			npc_plan = []
+	else:
+		npc_plan = []
 
 	_spawn_world(world_data)
 	_spawn_player(world_data)
@@ -892,19 +916,41 @@ func _spawn_world(world_data: Dictionary) -> void:
 	for conn in world_data.get("connections", []):
 		_draw_connection(conn)
 
+func _get_story_start_area_id() -> String:
+	"""Load dialogue.json and return the area id of the first event that has tags.area (story start)."""
+	var path := _resolve_path("res://generated/dialogue.json")
+	var data = _load_json(path)
+	if data == null:
+		return ""
+	var evs: Array = data.get("events", [])
+	for ev in evs:
+		if ev is not Dictionary:
+			continue
+		var tags = ev.get("tags", {})
+		if tags is Dictionary and tags.has("area"):
+			return str(tags.get("area", ""))
+	return ""
+
 func _spawn_player(world_data: Dictionary) -> void:
 	print("WorldLoader: _spawn_player called")
 	var areas: Array = world_data.get("areas", [])
 	if areas.is_empty():
 		push_error("WorldLoader: No areas found in world data, cannot spawn player")
 		return
-		
-	# Find a good spawn point (e.g. "mountain_road" or just the first area)
+	# Spawn at story start: first area mentioned in dialogue (edge/road of where story begins)
+	var story_start_area_id := _get_story_start_area_id()
 	var spawn_area = areas[0]
-	for a in areas:
-		if a.get("area_id") == "mountain_road":
-			spawn_area = a
-			break
+	if not story_start_area_id.is_empty():
+		for a in areas:
+			if a.get("area_id") == story_start_area_id:
+				spawn_area = a
+				print("WorldLoader: Spawning at story start area: ", story_start_area_id)
+				break
+	else:
+		for a in areas:
+			if a.get("area_id") == "mountain_road":
+				spawn_area = a
+				break
 			
 	var spawn_pos = Vector3.ZERO
 	var found_gate = false
@@ -1089,6 +1135,7 @@ func _spawn_area(area: Dictionary) -> void:
 	if area_layouts.has(area_id):
 		_spawn_tilemap_grid(root, area_id)
 		_spawn_entities(root, area_id)
+		_spawn_npcs_for_area(root, area_id)
 		_spawn_internal_roads(root, area_id)
 
 # Remove preload, we will load at runtime
@@ -1359,9 +1406,8 @@ func _spawn_entities(area_node: Node3D, area_id: String) -> void:
 	var tilemap_min_x: float = float(a.get("tilemap_min_x", 0.0))
 	var tilemap_min_y: float = float(a.get("tilemap_min_y", 0.0))
 	
-	# OPTIMIZATION: Group entities by model path to use MultiMeshInstance3D for repeated models
-	# This dramatically reduces memory usage on Web (prevents texture duplication)
 	var entities_by_model := {}  # Path -> Array of entity data
+	var entities_no_glb: Array = []  # Entities with no GLB; spawn as cuboid
 	
 	for e in entities:
 		var eid := str(e.get("id", e.get("name", "entity")))
@@ -1374,19 +1420,218 @@ func _spawn_entities(area_node: Node3D, area_id: String) -> void:
 				"entity_id": eid,
 				"path": path
 			})
+		else:
+			entities_no_glb.append({"entity": e, "entity_id": eid, "path": ""})
 	
-	# Spawn entities: use MultiMeshInstance3D for models with 2+ instances on Web to save memory
+	# Spawn entities with GLB when path exists (multimesh); placeholder box only when no path
 	for model_path in entities_by_model.keys():
 		var entity_list = entities_by_model[model_path]
-		
-		# Use MultiMeshInstance3D for repeated models (2+ instances on Web) to save memory
-		# This dramatically reduces memory by sharing textures across instances
-		if entity_list.size() >= 2 and is_web:
-			_spawn_entities_multimesh(area_node, area_id, model_path, entity_list, tilemap_min_x, tilemap_min_y)
+		_spawn_entities_multimesh(area_node, area_id, model_path, entity_list, tilemap_min_x, tilemap_min_y)
+	for item in entities_no_glb:
+		_spawn_single_entity(area_node, area_id, item["entity"], item["entity_id"], item["path"], tilemap_min_x, tilemap_min_y)
+
+const NPC_ENTITY_MARGIN := 0.25  # NPC center must be this far outside any entity rect
+
+func _point_inside_entity(px: float, pz: float, ent: Dictionary) -> bool:
+	var ex := float(ent.get("x", 0))
+	var ey := float(ent.get("y", 0))
+	var ew := float(ent.get("w", 1))
+	var eh := float(ent.get("h", 1))
+	return px >= ex and px < ex + ew and pz >= ey and pz < ey + eh
+
+func _point_overlaps_entity(px: float, pz: float, ent: Dictionary) -> bool:
+	var ex := float(ent.get("x", 0))
+	var ey := float(ent.get("y", 0))
+	var ew := float(ent.get("w", 1))
+	var eh := float(ent.get("h", 1))
+	return px >= ex - NPC_ENTITY_MARGIN and px < ex + ew + NPC_ENTITY_MARGIN and pz >= ey - NPC_ENTITY_MARGIN and pz < ey + eh + NPC_ENTITY_MARGIN
+
+func _point_inside_any_entity(px: float, pz: float, entities: Array) -> bool:
+	for ent in entities:
+		if _point_overlaps_entity(px, pz, ent):
+			return true
+	return false
+
+func _spawn_npcs_for_area(area_node: Node3D, area_id: String) -> void:
+	"""Place NPC cuboids on the road or next to entity, outside entity footprints (npc_plan from world_plan)."""
+	if npc_plan.is_empty():
+		return
+	var a: Dictionary = area_layouts.get(area_id, {})
+	var entities: Array = a.get("entities", [])
+	var road_tiles: Array = a.get("road_tiles_world", [])
+	var tilemap_min_x: float = float(a.get("tilemap_min_x", 0.0))
+	var tilemap_min_y: float = float(a.get("tilemap_min_y", 0.0))
+	for npc in npc_plan:
+		if str(npc.get("area_id", "")) != area_id:
+			continue
+		var anchor_ent = npc.get("anchor_entity", {})
+		if anchor_ent is not Dictionary:
+			continue
+		var anchor_id: String = str(anchor_ent.get("id", ""))
+		if anchor_id.is_empty():
+			continue
+		var e: Dictionary = {}
+		for ent in entities:
+			if str(ent.get("id", "")) == anchor_id:
+				e = ent
+				break
+		if e.is_empty():
+			continue
+		var ex := float(e.get("x", 0))
+		var ey := float(e.get("y", 0))
+		var ew := float(e.get("w", 2))
+		var eh := float(e.get("h", 2))
+		var rotation_deg: float = float(e.get("rotation_deg", 180))
+		var cx := ex + ew / 2.0
+		var cz := ey + eh / 2.0
+		var rad := deg_to_rad(rotation_deg)
+		var dir_x := sin(rad)
+		var dir_z := -cos(rad)
+		var npc_grid_x: float
+		var npc_grid_z: float
+		var needs_frontage: bool = bool(e.get("needs_frontage", false))
+		if needs_frontage and road_tiles.size() > 0:
+			var ideal_gx := cx + 2.0 * dir_x
+			var ideal_gz := cz + 2.0 * dir_z
+			var best_dist := 1e10
+			var best_tile: Array = []
+			for t in road_tiles:
+				if not (t is Array) or t.size() < 2:
+					continue
+				var tgx := float(t[0])
+				var tgz := float(t[1])
+				if _point_inside_any_entity(tgx, tgz, entities):
+					continue
+				var d := (tgx - ideal_gx) * (tgx - ideal_gx) + (tgz - ideal_gz) * (tgz - ideal_gz)
+				if d < best_dist:
+					best_dist = d
+					best_tile = t
+			if best_tile.size() >= 2:
+				npc_grid_x = float(best_tile[0])
+				npc_grid_z = float(best_tile[1])
+			else:
+				npc_grid_x = ideal_gx
+				npc_grid_z = ideal_gz
+			if _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+				var offset_min := maxf(ew, eh) / 2.0 + NPC_ENTITY_MARGIN
+				var offset := offset_min
+				for try in range(25):
+					npc_grid_x = cx + offset * dir_x
+					npc_grid_z = cz + offset * dir_z
+					if not _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+						break
+					offset += 0.5
+				if _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+					continue
 		else:
-			# Individual instances for unique or few instances
-			for item in entity_list:
-				_spawn_single_entity(area_node, area_id, item["entity"], item["entity_id"], item["path"], tilemap_min_x, tilemap_min_y)
+			if road_tiles.size() > 0:
+				var best_road_dist := 1e10
+				var rx := cx
+				var rz := cz
+				for t in road_tiles:
+					if not (t is Array) or t.size() < 2:
+						continue
+					var tgx := float(t[0])
+					var tgz := float(t[1])
+					if _point_inside_any_entity(tgx, tgz, entities):
+						continue
+					var d := (tgx - cx) * (tgx - cx) + (tgz - cz) * (tgz - cz)
+					if d < best_road_dist:
+						best_road_dist = d
+						rx = tgx
+						rz = tgz
+				if best_road_dist < 1e9:
+					var dx := rx - cx
+					var dz := rz - cz
+					var len_sq := dx * dx + dz * dz
+					if len_sq > 0.0001:
+						var inv := 1.0 / sqrt(len_sq)
+						dir_x = dx * inv
+						dir_z = dz * inv
+			var offset_min := maxf(ew, eh) / 2.0 + NPC_ENTITY_MARGIN
+			var offset := offset_min
+			var max_tries := 25
+			for try in range(max_tries):
+				npc_grid_x = cx + offset * dir_x
+				npc_grid_z = cz + offset * dir_z
+				if not _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+					break
+				offset += 0.5
+			if _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+				continue
+		var world_x := (npc_grid_x + tilemap_min_x) * tile_size_m
+		var world_z := (npc_grid_z + tilemap_min_y) * tile_size_m
+		var npc_id := str(npc.get("npc_id", "npc"))
+		var display_name := str(npc.get("display_name", "NPC"))
+		var model_path: String = npc_models.get(npc_id, "")
+		if model_path != "":
+			# Spawn generated 3D NPC model (root at character center height for consistent E-to-talk distance)
+			var root := Node3D.new()
+			root.name = "npc_%s" % npc_id
+			root.position = Vector3(world_x, 0.9, world_z)
+			# Orient NPC so VLM-detected front faces the road (away from anchor)
+			var asset_name := _get_asset_name_from_path(model_path)
+			var asset_front_yaw: float = 0.0
+			if asset_metadata.has(asset_name):
+				var meta = asset_metadata[asset_name]
+				if meta.has("front_yaw_deg") and meta["front_yaw_deg"] != null:
+					asset_front_yaw = float(meta["front_yaw_deg"])
+			var dx := cx - npc_grid_x
+			var dz := cz - npc_grid_z
+			# Face away from anchor so NPC faces the road / approach direction
+			var toward_anchor_yaw: float = rad_to_deg(atan2(dx, -dz)) if (dx * dx + dz * dz) > 0.0001 else 0.0
+			var desired_facing_yaw_deg: float = toward_anchor_yaw + 180.0
+			var rotation_yaw_deg: float = desired_facing_yaw_deg - asset_front_yaw
+			root.rotation.y = deg_to_rad(rotation_yaw_deg)
+			var model_node = _load_model_instance(model_path)
+			if model_node != null:
+				model_node.position = Vector3(0, -0.9, 0)
+				model_node.scale = Vector3(npc_model_scale, npc_model_scale, npc_model_scale)
+				root.add_child(model_node)
+			var npc_label := Label3D.new()
+			npc_label.text = display_name
+			npc_label.position = Vector3(0, 1.0, 0)  # Hover above head (~1.7m character)
+			npc_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			npc_label.font_size = 28
+			npc_label.outline_render_priority = 0
+			npc_label.modulate = Color(1, 1, 1)
+			root.add_child(npc_label)
+			var body := StaticBody3D.new()
+			var shape := CollisionShape3D.new()
+			var capsule := CapsuleShape3D.new()
+			capsule.radius = 0.4
+			capsule.height = 1.8
+			shape.shape = capsule
+			body.add_child(shape)
+			root.add_child(body)
+			root.add_to_group("npc")
+			root.set_meta("display_name", display_name)
+			root.set_meta("npc_id", npc_id)
+			root.set_meta("description", str(npc.get("description", "")))
+			area_node.add_child(root)
+		else:
+			# Placeholder box when 3D generation was skipped or no model
+			var box := CSGBox3D.new()
+			box.name = "npc_%s" % npc_id
+			box.size = Vector3(0.3, 1.8, 0.3)
+			box.position = Vector3(world_x, 0.9, world_z)
+			box.use_collision = true
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(0.25, 0.45, 0.7)
+			box.material = mat
+			area_node.add_child(box)
+			var npc_label := Label3D.new()
+			npc_label.text = display_name
+			npc_label.position = Vector3(0, 1.1, 0)
+			npc_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			npc_label.font_size = 28
+			npc_label.outline_render_priority = 0
+			npc_label.modulate = Color(1, 1, 1)
+			box.add_child(npc_label)
+			box.add_to_group("npc")
+			box.set_meta("display_name", display_name)
+			box.set_meta("npc_id", npc_id)
+			box.set_meta("description", str(npc.get("description", "")))
 
 func _spawn_single_entity(area_node: Node3D, area_id: String, e: Dictionary, eid: String, path: String, tilemap_min_x: float, tilemap_min_y: float) -> void:
 	var grid_x := float(e.get("x", 0))
@@ -1417,50 +1662,17 @@ func _spawn_single_entity(area_node: Node3D, area_id: String, e: Dictionary, eid
 	label.modulate = Color(1, 0, 0) if e.get("needs_frontage", false) else Color(1, 1, 1)
 	area_node.add_child(label)
 	
-	# Instantiate model using Web-safe loading
-	var instance: Node3D = _load_model_instance(path)
-	if instance != null:
-		instance.name = eid
-		
-		# 1) Place at target XZ first
-		instance.position = Vector3((world_x + ew/2.0) * tile_size_m, 0.0, (world_z + eh/2.0) * tile_size_m)
-		area_node.add_child(instance)
-		
-		# 2) ROTATE FIRST to face the road (entity_facing_yaw from layout "intent.dir", asset_front_yaw from asset_metadata)
-		var asset_name = _get_asset_name_from_path(path)
-		var asset_front_yaw: float = 0.0
-		if asset_metadata.has(asset_name):
-			var meta = asset_metadata[asset_name]
-			if meta.has("front_yaw_deg") and meta["front_yaw_deg"] != null:
-				asset_front_yaw = float(meta["front_yaw_deg"])
-		
-		var rotation_yaw_deg: float = entity_facing_yaw - asset_front_yaw
-		instance.rotation.y = deg_to_rad(rotation_yaw_deg)
-		if debug_orientation:
-			print("Orientation ", eid, " | layout dir->yaw: ", entity_facing_yaw, " | asset front_yaw: ", asset_front_yaw, " | rotation_yaw: ", rotation_yaw_deg)
-		
-		# 2b) Generate Collision
-		_add_collision_recursive(instance)
-		
-		# 3) THEN scale to fit footprint
-		var desired_w_m = ew * tile_size_m * 0.85
-		var desired_d_m = eh * tile_size_m * 0.85
-		var desired_h_m = height * tile_size_m
-		var ground_y_global = area_node.global_transform.origin.y
-		
-		_fit_instance_to_footprint(instance, desired_w_m, desired_d_m, desired_h_m, ground_y_global)
-	else:
-		push_error("Failed to load model instance for entity: " + eid)
-		# Fallback to box
-		var box := CSGBox3D.new()
-		box.name = eid
-		box.size = Vector3(ew * 0.85, height, eh * 0.85) * tile_size_m 
-		box.position = Vector3((world_x + ew/2.0) * tile_size_m, (height/2.0) * tile_size_m, (world_z + eh/2.0) * tile_size_m)
-		box.use_collision = true
-		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(0.6, 0.2, 0.2)
-		box.material = mat
-		area_node.add_child(box)
+	# White cube placeholder for building/entity
+	var box := CSGBox3D.new()
+	box.name = eid
+	box.size = Vector3(ew * 0.85, height, eh * 0.85) * tile_size_m
+	box.position = Vector3((world_x + ew/2.0) * tile_size_m, (height/2.0) * tile_size_m, (world_z + eh/2.0) * tile_size_m)
+	box.rotation.y = deg_to_rad(entity_facing_yaw)
+	box.use_collision = true
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1, 1, 1)
+	box.material = mat
+	area_node.add_child(box)
 
 func _spawn_entities_multimesh(area_node: Node3D, area_id: String, model_path: String, entity_list: Array, tilemap_min_x: float, tilemap_min_y: float) -> void:
 	"""
@@ -1471,13 +1683,15 @@ func _spawn_entities_multimesh(area_node: Node3D, area_id: String, model_path: S
 	if entity_list.size() >= 10:
 		print("Using MultiMeshInstance3D for ", entity_list.size(), " instances of: ", model_path)
 	
-	# Load the model once to extract mesh
+	# Load the model once to extract mesh (try resolved path if res:// fails)
 	var instance = _load_model_instance(model_path)
 	if instance == null:
+		var resolved = _resolve_path(model_path)
+		if resolved != model_path:
+			instance = _load_model_instance(resolved)
+	if instance == null:
 		push_error("Failed to load model for MultiMesh: " + model_path)
-		# Fallback to individual spawning
-		for item in entity_list:
-			_spawn_single_entity(area_node, area_id, item["entity"], item["entity_id"], item["path"], tilemap_min_x, tilemap_min_y)
+		# No box fallback: skip these entities (GLB only, no white cubes)
 		return
 	
 	# Find mesh in the loaded instance
@@ -1485,18 +1699,14 @@ func _spawn_entities_multimesh(area_node: Node3D, area_id: String, model_path: S
 	if mesh_instance == null:
 		push_error("Could not find MeshInstance3D in model: " + model_path)
 		instance.queue_free()
-		# Fallback to individual spawning
-		for item in entity_list:
-			_spawn_single_entity(area_node, area_id, item["entity"], item["entity_id"], item["path"], tilemap_min_x, tilemap_min_y)
+		# No box fallback: skip these entities (GLB only, no white cubes)
 		return
 	
 	var source_mesh = mesh_instance.mesh
 	if source_mesh == null:
 		push_error("Mesh is null in model: " + model_path)
 		instance.queue_free()
-		# Fallback to individual spawning
-		for item in entity_list:
-			_spawn_single_entity(area_node, area_id, item["entity"], item["entity_id"], item["path"], tilemap_min_x, tilemap_min_y)
+		# No box fallback: skip these entities (GLB only, no white cubes)
 		return
 	
 	# CRITICAL: Get the mesh instance's transform relative to the instance root
@@ -1560,6 +1770,11 @@ func _spawn_entities_multimesh(area_node: Node3D, area_id: String, model_path: S
 	# Base collision size from world-space AABB (accounts for original scale/rotation)
 	# Individual instances will scale this based on their footprint
 	var base_collision_size = instance_world_aabb.size
+	
+	# Mesh-derived collision shape (trimesh = exact visual mesh) so collision matches the visible geometry
+	var mesh_collision_shape: Shape3D = null
+	if use_mesh_collision_for_entities:
+		mesh_collision_shape = source_mesh.create_trimesh_shape()
 	
 	# Set transforms for each instance
 	for i in range(entity_list.size()):
@@ -1643,15 +1858,15 @@ func _spawn_entities_multimesh(area_node: Node3D, area_id: String, model_path: S
 		
 		mm.set_instance_transform(i, transform)
 		
-		# Add collision shape for this instance
-		# Collision boxes match visual mesh size exactly
-		var scaled_collision_size = base_collision_size * final_scale
+		# Add collision shape for this instance (mesh convex when available, else box)
 		var coll := CollisionShape3D.new()
-		# Create a new shape for this instance with the correct size
-		var instance_shape := BoxShape3D.new()
-		instance_shape.size = scaled_collision_size
-		coll.shape = instance_shape
-		# Use the same transform as the MultiMesh instance
+		if mesh_collision_shape != null:
+			coll.shape = mesh_collision_shape
+		else:
+			var scaled_collision_size = base_collision_size * final_scale
+			var instance_shape := BoxShape3D.new()
+			instance_shape.size = scaled_collision_size
+			coll.shape = instance_shape
 		coll.transform = transform
 		static_body.add_child(coll)
 		

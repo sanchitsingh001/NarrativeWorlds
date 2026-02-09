@@ -36,6 +36,8 @@ DEFAULT_GROUP_DESCRIPTIONS_PATH = Path(os.getenv("ASSET_GROUP_DESCRIPTIONS_PATH"
 GLB_OUTPUT_DIR = Path("mesh_dir/glb_files")
 GODOT_DIR = Path("godot_world")
 ENTITY_MODELS_PATH = Path("godot_world/generated/entity_models.json")
+DEFAULT_WORLD_PLAN_PATH = Path(os.getenv("WORLD_PLAN_PATH", "godot_world/generated/world_plan.json"))
+NPC_MODELS_PATH = Path("godot_world/generated/npc_models.json")
 
 # Polling settings
 POLL_INTERVAL_SECONDS = 60
@@ -198,6 +200,46 @@ def get_groups_to_generate(
     return out
 
 
+def load_world_plan(world_plan_path: Path) -> list:
+    """Load world_plan.json and return npc_plan list. Returns [] if file missing or invalid."""
+    if not world_plan_path.exists():
+        return []
+    try:
+        with open(world_plan_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        npc_plan = data.get("npc_plan", [])
+        return npc_plan if isinstance(npc_plan, list) else []
+    except Exception:
+        return []
+
+
+def get_npc_groups_to_generate(npc_plan: list) -> List[Tuple[str, str]]:
+    """
+    Return list of (group_name, prompt) for NPCs with non-empty description.
+    group_name = "npc_" + npc_id, prompt = description.
+    """
+    out: List[Tuple[str, str]] = []
+    for npc in npc_plan:
+        if not isinstance(npc, dict):
+            continue
+        npc_id = npc.get("npc_id") or npc.get("id")
+        if not npc_id:
+            continue
+        description = (npc.get("description") or "").strip()
+        if not description:
+            continue
+        group_name = "npc_" + str(npc_id)
+        out.append((group_name, description))
+    return out
+
+
+def save_npc_models(npc_models: dict) -> None:
+    """Save npc_models mapping to JSON."""
+    NPC_MODELS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(NPC_MODELS_PATH, "w", encoding="utf-8") as f:
+        json.dump(npc_models, f, indent=2)
+
+
 def load_existing_entity_models() -> dict:
     """Load existing entity_models.json if it exists."""
     if ENTITY_MODELS_PATH.exists():
@@ -235,6 +277,12 @@ def main():
         action="store_true",
         help="Non-interactive: process all groups with descriptions, no confirmation prompt.",
     )
+    parser.add_argument(
+        "--world-plan",
+        type=Path,
+        default=DEFAULT_WORLD_PLAN_PATH,
+        help="Path to world_plan.json (for NPC 3D generation from npc_plan[].description).",
+    )
     args = parser.parse_args()
 
     batch = args.batch or os.getenv("BATCH", "").strip().lower() in ("1", "true", "yes")
@@ -266,8 +314,17 @@ def main():
     layout_groups, placement_to_group = collect_groups_and_placements_from_v3(layout)
     groups_to_generate = get_groups_to_generate(layout_groups, placement_to_group, group_descriptions)
 
+    # Add NPCs from world_plan (group_name = npc_<npc_id>, prompt = description)
+    npc_plan = load_world_plan(args.world_plan)
+    npc_groups = get_npc_groups_to_generate(npc_plan)
+    groups_to_generate = groups_to_generate + npc_groups
+    if npc_groups:
+        print(f"NPCs with descriptions: {len(npc_groups)}")
+        for group_name, _ in npc_groups:
+            print(f"  - {group_name}")
+
     if not groups_to_generate:
-        print("\nNo groups with prompts found. Ensure --descriptions has groups with 'prompt' and layout has placements with 'group'.")
+        print("\nNo groups with prompts found. Ensure --descriptions has groups with 'prompt' and layout has placements with 'group', or provide --world-plan with npc_plan[].description.")
         return
 
     print(f"\nGroups with descriptions: {len(groups_to_generate)}")
@@ -367,7 +424,19 @@ def main():
             if group in downloaded:
                 entity_models[placement_id] = f"res://models_used/{group}.glb"
         save_entity_models(entity_models)
-        print(f"Updated entity_models.json for {len(downloaded)} groups")
+        print(f"Updated entity_models.json for layout groups")
+
+    # Write npc_models.json: npc_id -> res://models_used/npc_<npc_id>.glb for downloaded NPC groups
+    npc_models: Dict[str, str] = {}
+    for group_name in downloaded:
+        if group_name.startswith("npc_"):
+            npc_id = group_name[4:]
+            npc_models[npc_id] = f"res://models_used/{group_name}.glb"
+    save_npc_models(npc_models)
+    if npc_models:
+        print(f"Updated npc_models.json for {len(npc_models)} NPCs")
+    else:
+        print("Wrote npc_models.json (no NPC GLBs this run)")
 
     if any(j.get("status") == "FAIL" for j in jobs.values()):
         print("\nFailed groups:")

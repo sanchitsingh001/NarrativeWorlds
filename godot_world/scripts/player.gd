@@ -30,6 +30,8 @@ func _ready() -> void:
 var fly_mode: bool = false
 var _last_frame_pos := Vector3.ZERO
 var _stuck_frames := 0
+const NPC_INTERACT_RANGE_M := 3.0
+var _near_npc: Node = null  # Closest NPC in range (group "npc"), for E-to-talk
 
 func _setup_input_map() -> void:
 	# Programmatically add WASD actions if they don't exist
@@ -88,6 +90,12 @@ func _setup_input_map() -> void:
 		ev.keycode = KEY_Q
 		InputMap.action_add_event("fly_down", ev)
 
+	if not InputMap.has_action("interact"):
+		InputMap.add_action("interact")
+		var ev = InputEventKey.new()
+		ev.keycode = KEY_E
+		InputMap.action_add_event("interact", ev)
+
 func _apply_player_scale() -> void:
 	if camera:
 		camera.position.y = player_height_m * eye_height_ratio
@@ -131,9 +139,40 @@ func _unhandled_input(event: InputEvent) -> void:
 		fly_mode = not fly_mode
 		print("Fly mode: ", "ON" if fly_mode else "OFF")
 
+	# Dialogue: E or Space to advance when in dialogue; E to start when near NPC
+	if DialogueManager != null:
+		if DialogueManager.has_active_dialogue():
+			if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
+				DialogueManager.advance()
+				get_viewport().set_input_as_handled()
+				return
+		elif _near_npc != null and event.is_action_pressed("interact"):
+			var display_name = _near_npc.get_meta("display_name", "") if _near_npc.has_meta("display_name") else ""
+			if not display_name.is_empty():
+				# Rotate NPC to face the player when starting dialogue
+				var npc_3d = _near_npc as Node3D
+				if npc_3d != null:
+					var look_target = Vector3(global_position.x, npc_3d.global_position.y, global_position.z)
+					npc_3d.look_at(look_target, Vector3.UP)
+					npc_3d.rotate_y(PI)  # Model faces +Z; look_at uses -Z
+				DialogueManager.start_dialogue(display_name)
+				get_viewport().set_input_as_handled()
+				return
+
 var frame_count = 0
 
 func _physics_process(delta: float) -> void:
+	# Update closest NPC in range for E-to-talk
+	var npcs = get_tree().get_nodes_in_group("npc")
+	var best_dist := NPC_INTERACT_RANGE_M
+	_near_npc = null
+	for n in npcs:
+		if n is Node3D:
+			var d := global_position.distance_to((n as Node3D).global_position)
+			if d < best_dist:
+				best_dist = d
+				_near_npc = n
+
 	frame_count += 1
 	if frame_count % 60 == 0:
 		var input = Input.get_vector("move_left", "move_right", "move_forward", "move_backward")

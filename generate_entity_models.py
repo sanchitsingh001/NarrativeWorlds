@@ -4,9 +4,10 @@ import re
 import shutil
 from pathlib import Path
 
+GODOT_DIR = Path("godot_world")
 INPUT_FILE = "godot_world/generated/world_entity_layout_llm_v3_out.json"
 OUTPUT_FILE = "godot_world/generated/entity_models.json"
-GODOT_DIR = Path("godot_world")
+NPC_MODELS_FILE = GODOT_DIR / "generated" / "npc_models.json"
 
 # Paths for asset optimization
 MODELS_LIBRARY_DIR = GODOT_DIR / "models_library" # Source (all assets)
@@ -230,6 +231,13 @@ def main():
     
     with open(OUTPUT_FILE, 'w') as f:
         json.dump(entity_models, f, indent=2)
+
+    # Ensure npc_models.json exists (empty when 3D generation was skipped)
+    if not NPC_MODELS_FILE.exists():
+        NPC_MODELS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(NPC_MODELS_FILE, 'w') as f:
+            json.dump({}, f, indent=2)
+        print("Wrote empty npc_models.json (no NPC GLBs from 3D run).")
 
     print("Done.")
 
