@@ -32,6 +32,9 @@ python Worldplan.py
 echo "▶ Generating dialogue (world_plan → dialogue.json)"
 python DialogueGen.py
 
+echo "▶ Generating world graph from narrative (dialogue → world_graph.json)"
+python generate_world_graph.py
+
 echo "▶ Computing world geometry + gates"
 python world_block_diagram.py
 
@@ -43,6 +46,7 @@ mkdir -p "$GENERATED_DIR"
 cp -f "$LAYOUT_JSON" "$GENERATED_DIR/$LAYOUT_JSON"
 cp -f world_plan.json "$GENERATED_DIR/world_plan.json"
 cp -f dialogue.json "$GENERATED_DIR/dialogue.json"
+cp -f world_graph.json "$GENERATED_DIR/world_graph.json"
 
 if [ -z "${SKIP_3D_GENERATION:-}" ]; then
   echo "▶ Generating asset descriptions for ALL areas (OPENAI_API_KEY required)"
@@ -60,11 +64,16 @@ python generate_entity_models.py
 echo "▶ Building frontage asset list (GLBs used by needs_frontage=true entities)"
 python mesh_dir/frontage_assets.py
 
-if [ -z "${DEEPINFRA_API_KEY:-}" ]; then
+VLM_ARG="--ask_vlm"
+if [ -n "${SKIP_3D_GENERATION:-}" ]; then
+  echo "▶ Skipping VLM calls (SKIP_3D_GENERATION is set)"
+  VLM_ARG=""
+elif [ -z "${DEEPINFRA_API_KEY:-}" ]; then
   echo "⚠ DEEPINFRA_API_KEY not set; VLM front detection will fail (Blender will still run)."
 fi
-echo "▶ Running Blender front detection for frontage assets (--ask_vlm)"
-blender -b -P mesh_dir/batch_blender.py -- godot_world/models_used mesh_dir/renders --ask_vlm --frontage_assets mesh_dir/frontage_assets.json
+
+echo "▶ Running Blender front detection for frontage assets (${VLM_ARG})"
+blender -b -P mesh_dir/batch_blender.py -- godot_world/models_used mesh_dir/renders $VLM_ARG --frontage_assets mesh_dir/frontage_assets.json
 
 echo "▶ Merging front.json from mesh_dir/renders into godot_world/generated/asset_metadata.json"
 python mesh_dir/consolidate_metadata.py

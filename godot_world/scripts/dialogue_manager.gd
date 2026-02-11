@@ -28,6 +28,12 @@ var _hint_label: Label = null
 var _current_choice_goto_ids: Array = []  # [goto_id, ...]
 var _selected_choice_index: int = 0
 
+# Ending sequence: black screen + narrator lines, then quit
+var _ending_mode: bool = false
+var _ending_layer: CanvasLayer = null
+var _ending_label: Label = null
+var _ending_hint: Label = null
+
 
 func _ready() -> void:
 	_load_dialogue()
@@ -36,6 +42,11 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _ending_mode:
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_select"):
+			_ending_advance()
+			get_viewport().set_input_as_handled()
+		return
 	if not dialogue_active or _current_choice_goto_ids.is_empty():
 		return
 	var n := _current_choice_goto_ids.size()
@@ -70,6 +81,7 @@ func _load_dialogue() -> void:
 	events = dialogue_data.get("events", [])
 	event_by_id.clear()
 	npc_first_event.clear()
+	_ending_event_cache.clear()  # Clear cache when dialogue is reloaded
 	for i in range(events.size()):
 		var ev = events[i]
 		var eid := str(ev.get("id", ""))
@@ -93,6 +105,23 @@ func _resolve_path(res_path: String) -> String:
 	if FileAccess.file_exists(ext_path):
 		return ext_path
 	return res_path
+
+
+# Cache for ending event detection to avoid repeated traversal
+var _ending_event_cache: Dictionary = {}  # event_id -> bool
+
+
+func _is_ending_event(event_id: String) -> bool:
+	"""
+	Check if an event should start the ending sequence (black screen).
+	True if event_id is "end" OR if the event has tags.ending = true.
+	"""
+	if event_id == "end":
+		return true
+	
+	var ev: Dictionary = event_by_id.get(event_id, {})
+	var tags: Dictionary = ev.get("tags", {}) if ev.get("tags", {}) is Dictionary else {}
+	return tags.get("ending", false)
 
 
 func _build_ui() -> void:
@@ -163,7 +192,9 @@ func _build_ui() -> void:
 func _hide_ui() -> void:
 	if _layer:
 		_layer.visible = false
+	_hide_ending_ui()
 	dialogue_active = false
+	_ending_mode = false
 	current_event_id = ""
 	_dialogue_start_npc_name = ""
 	_current_choice_goto_ids.clear()
@@ -181,9 +212,27 @@ func _display_current() -> void:
 		end_dialogue()
 		return
 	var ev: Dictionary = event_by_id[current_event_id]
+	
+	# Check if this is an ending event FIRST (before speaker validation)
+	# This ensures ending events are shown on black screen, not in normal dialogue UI
+	if _is_ending_event(current_event_id):
+		_show_ending_sequence(ev)
+		return
+	
+	# Terminal ending: black screen + narrator line(s), then quit
+	var tags: Dictionary = ev.get("tags", {}) if ev.get("tags", {}) is Dictionary else {}
+	if current_event_id == "end" or tags.get("ending", false):
+		_show_ending_sequence(ev)
+		return
 	var speaker := str(ev.get("speaker", ""))
 	# End conversation when we would show another NPC (scope dialogue to the one we started with)
 	if speaker != "NARRATOR" and speaker != _dialogue_start_npc_name:
+		# Safety net: if this event leads to "end", transition to ending sequence instead of ending
+		if str(ev.get("goto", "")) == "end":
+			current_event_id = "end"
+			var end_ev: Dictionary = event_by_id.get("end", {})
+			_show_ending_sequence(end_ev)
+			return
 		end_dialogue()
 		return
 	var text := str(ev.get("text", ""))
@@ -241,7 +290,7 @@ func _on_choice_pressed(goto_id: String) -> void:
 
 
 func has_active_dialogue() -> bool:
-	return dialogue_active
+	return dialogue_active or _ending_mode
 
 
 func start_dialogue(npc_display_name: String) -> void:
@@ -256,6 +305,9 @@ func start_dialogue(npc_display_name: String) -> void:
 
 
 func advance() -> void:
+	if _ending_mode:
+		_ending_advance()
+		return
 	if not dialogue_active or current_event_id.is_empty():
 		return
 	# When showing choices, E/Space confirms the currently selected option
@@ -274,3 +326,96 @@ func advance() -> void:
 
 func end_dialogue() -> void:
 	_hide_ui()
+
+
+func _show_ending_sequence(ev: Dictionary) -> void:
+	# Hide normal dialogue panel; show fullscreen black + narrator text
+	if _layer:
+		_layer.visible = false
+	_ending_mode = true
+	if _ending_layer == null:
+		_ending_layer = CanvasLayer.new()
+		_ending_layer.name = "EndingLayer"
+		_ending_layer.layer = 1000
+		add_child(_ending_layer)
+		var black := ColorRect.new()
+		black.name = "EndingBlack"
+		black.set_anchors_preset(Control.PRESET_FULL_RECT)
+		black.set_anchor(SIDE_LEFT, 0.0)
+		black.set_anchor(SIDE_TOP, 0.0)
+		black.set_anchor(SIDE_RIGHT, 1.0)
+		black.set_anchor(SIDE_BOTTOM, 1.0)
+		black.offset_left = 0
+		black.offset_top = 0
+		black.offset_right = 0
+		black.offset_bottom = 0
+		black.color = Color.BLACK
+		black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_ending_layer.add_child(black)
+		var center := CenterContainer.new()
+		center.name = "EndingCenter"
+		center.set_anchors_preset(Control.PRESET_FULL_RECT)
+		center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 40)
+		_ending_layer.add_child(center)
+		var vbox := VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 24)
+		center.add_child(vbox)
+		_ending_label = Label.new()
+		_ending_label.name = "EndingLabel"
+		_ending_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_ending_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_ending_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_ending_label.custom_minimum_size.x = 600
+		_ending_label.add_theme_font_size_override("font_size", 28)
+		_ending_label.add_theme_color_override("font_color", Color.WHITE)
+		vbox.add_child(_ending_label)
+		_ending_hint = Label.new()
+		_ending_hint.name = "EndingHint"
+		_ending_hint.text = "Press E or Space to continue"
+		_ending_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_ending_hint.add_theme_font_size_override("font_size", 16)
+		_ending_hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		vbox.add_child(_ending_hint)
+	_ending_layer.visible = true
+	_ending_label.text = str(ev.get("text", ""))
+
+
+func _hide_ending_ui() -> void:
+	if _ending_layer:
+		_ending_layer.visible = false
+
+
+func _ending_advance() -> void:
+	if not _ending_mode or current_event_id.is_empty():
+		return
+	var ev: Dictionary = event_by_id.get(current_event_id, {})
+	var goto_id: String = str(ev.get("goto", ""))
+	if goto_id.is_empty():
+		_quit_or_the_end()
+		return
+	current_event_id = goto_id
+	ev = event_by_id.get(current_event_id, {})
+	if ev.is_empty():
+		_quit_or_the_end()
+		return
+	_ending_label.text = str(ev.get("text", ""))
+
+
+func _quit_or_the_end() -> void:
+	_ending_mode = false
+	_hide_ending_ui()
+	if _ending_layer != null and _ending_label != null:
+		_ending_layer.visible = true
+		_ending_label.text = "The End"
+		if _ending_hint:
+			_ending_hint.text = ""
+	if OS.has_feature("web"):
+		pass
+	else:
+		# Show "The End" on black for ~1.5 s, then quit
+		var t := get_tree().create_timer(1.5)
+		t.timeout.connect(_on_ending_quit_timeout)
+
+
+func _on_ending_quit_timeout() -> void:
+	get_tree().quit()

@@ -1,14 +1,16 @@
-[gd_scene load_steps=7 format=3 uid="uid://b8j4k5l6m7n8"]
+[gd_scene load_steps=8 format=3 uid="uid://b8j4k5l6m7n8"]
 
 [ext_resource type="Script" path="res://scripts/world_loader.gd" id="1_loader"]
 [ext_resource type="Script" path="res://scripts/weather_manager.gd" id="2_weather"]
 [ext_resource type="Script" path="res://scripts/day_night_cycle.gd" id="3_daynight"]
 [ext_resource type="PackedScene" uid="uid://settings_menu_001" path="res://scenes/SettingsMenu.tscn" id="4_settings"]
+[ext_resource type="Texture2D" path="res://sky.png" id="5_sky"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_default"]
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_default"]
+panorama = ExtResource("5_sky")
 
 [sub_resource type="Sky" id="Sky_default"]
-sky_material = SubResource("ProceduralSkyMaterial_default")
+sky_material = SubResource("PanoramaSkyMaterial_default")
 
 [sub_resource type="Environment" id="Environment_default"]
 background_mode = 2

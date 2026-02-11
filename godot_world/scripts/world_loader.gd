@@ -19,6 +19,9 @@ const HEIGHT_SCALE := 1.0
 @export var v3_road_tile_overlap: float = 1.08 # >1.0 makes internal road tiles look continuous
 @export var use_road_collision: bool = false # set true only if you really need road colliders
 
+# World graph (story_spine + connections with from_edge/to_edge) for spawn-on-opposite-edge
+@export var world_graph_path := "res://generated/world_graph.json"
+
 # Legacy world files (deprecated; no longer used for world structure)
 @export var world_layout_path := "res://generated/world_layout.json"
 @export var area_layouts_path := "res://generated/area_layouts.json"
@@ -28,6 +31,7 @@ const HEIGHT_SCALE := 1.0
 @export var world_plan_path := "res://generated/world_plan.json"
 @export var road_texture_mapping_path := "res://generated/road_texture_mapping.json"
 @export var debug_orientation: bool = false  # Log entity_facing_yaw, asset_front_yaw, rotation_yaw per placed entity
+@export var align_entities_to_roads: bool = true  # If true, entities with needs_frontage align to nearest road direction; if false, use cardinal directions from intent.dir
 @export var npc_model_scale: float = 1.5  # Scale NPC GLBs to human size (models ~1m, target ~1.7m)
 @export var normalize_group_sizes: bool = true  # Use fixed size per group (ignores layout w/h) for consistent footprints
 @export var group_size_overrides: Dictionary = {}  # group_name -> {"w": float, "h": float} (optional manual overrides)
@@ -199,6 +203,117 @@ func _dir_to_yaw_deg(d: String) -> float:
 		_:
 			return 180.0
 
+func _calculate_rotation_from_road(entity_x: float, entity_y: float, entity_w: float, entity_h: float, road_tiles: Array, needs_frontage: bool) -> float:
+	"""
+	Calculate entity rotation based on nearest road direction.
+	If entity is on or very close to road, faces along the road direction.
+	If entity is further from road, faces toward the road.
+	"""
+	if not needs_frontage or road_tiles.is_empty():
+		return 180.0  # Default facing South
+	
+	# Find center of entity
+	var entity_center_x := entity_x + entity_w / 2.0
+	var entity_center_y := entity_y + entity_h / 2.0
+	
+	# Find nearest road tile
+	var nearest_road: Array = []
+	var min_dist := 1e10
+	
+	for road_tile in road_tiles:
+		if not (road_tile is Array) or road_tile.size() < 2:
+			continue
+		var rx := float(road_tile[0])
+		var ry := float(road_tile[1])
+		var dist_sq := (rx - entity_center_x) * (rx - entity_center_x) + (ry - entity_center_y) * (ry - entity_center_y)
+		if dist_sq < min_dist:
+			min_dist = dist_sq
+			nearest_road = road_tile
+	
+	if nearest_road.is_empty():
+		return 180.0  # No road found, default to South
+	
+	var road_x := float(nearest_road[0])
+	var road_y := float(nearest_road[1])
+	var distance_to_road := sqrt(min_dist)
+	
+	var road_direction_x := 0.0
+	var road_direction_y := 0.0
+	
+	# If entity is very close to road (within ~0.5 tiles), align with road direction
+	# Otherwise, face toward the road
+	if distance_to_road < 0.5:
+		# Entity is on/near road: find road direction from adjacent road tiles
+		var adjacent_roads: Array = []
+		for road_tile in road_tiles:
+			if not (road_tile is Array) or road_tile.size() < 2:
+				continue
+			var rx := float(road_tile[0])
+			var ry := float(road_tile[1])
+			var dist_to_nearest := sqrt((rx - road_x) * (rx - road_x) + (ry - road_y) * (ry - road_y))
+			if dist_to_nearest > 0.1 and dist_to_nearest < 1.5:  # Adjacent tiles (within ~1.5 tiles)
+				adjacent_roads.append(road_tile)
+		
+		if adjacent_roads.size() > 0:
+			# Calculate average direction from nearest road to adjacent roads (road direction)
+			for adj_road in adjacent_roads:
+				var adj_x := float(adj_road[0])
+				var adj_y := float(adj_road[1])
+				road_direction_x += (adj_x - road_x)
+				road_direction_y += (adj_y - road_y)
+			road_direction_x /= float(adjacent_roads.size())
+			road_direction_y /= float(adjacent_roads.size())
+			
+			# Normalize
+			var road_dir_len := sqrt(road_direction_x * road_direction_x + road_direction_y * road_direction_y)
+			if road_dir_len > 0.001:
+				road_direction_x /= road_dir_len
+				road_direction_y /= road_dir_len
+			else:
+				# Fallback: use direction from entity to road
+				var dx := road_x - entity_center_x
+				var dy := road_y - entity_center_y
+				var entity_to_road_len := sqrt(dx * dx + dy * dy)
+				if entity_to_road_len > 0.001:
+					road_direction_x = dx / entity_to_road_len
+					road_direction_y = dy / entity_to_road_len
+				else:
+					return 180.0  # Can't determine direction
+		else:
+			# No adjacent roads: face toward the road
+			var dx := road_x - entity_center_x
+			var dy := road_y - entity_center_y
+			var entity_to_road_len := sqrt(dx * dx + dy * dy)
+			if entity_to_road_len > 0.001:
+				road_direction_x = dx / entity_to_road_len
+				road_direction_y = dy / entity_to_road_len
+			else:
+				return 180.0  # Can't determine direction
+	else:
+		# Entity is further from road: face toward the road
+		var dx := road_x - entity_center_x
+		var dy := road_y - entity_center_y
+		var entity_to_road_len := sqrt(dx * dx + dy * dy)
+		if entity_to_road_len > 0.001:
+			road_direction_x = dx / entity_to_road_len
+			road_direction_y = dy / entity_to_road_len
+		else:
+			return 180.0  # Can't determine direction
+	
+	# Calculate angle: atan2(x, -y) gives angle from North (Z axis in 3D)
+	# In 2D: x is East, y is North (maps to z in 3D)
+	# So: atan2(road_direction_x, -road_direction_y) gives angle from North
+	var angle_rad := atan2(road_direction_x, -road_direction_y)
+	var angle_deg := rad_to_deg(angle_rad)
+	
+	# Normalize to 0-360
+	while angle_deg < 0:
+		angle_deg += 360.0
+	while angle_deg >= 360:
+		angle_deg -= 360.0
+	
+	return angle_deg
+
 func _edge_to_cardinal(edge: String) -> String:
 	var e := edge.strip_edges().to_lower()
 	if e == "top":
@@ -210,6 +325,53 @@ func _edge_to_cardinal(edge: String) -> String:
 	if e == "right":
 		return "E"
 	return edge
+
+
+func _opposite_edge(cardinal: String) -> String:
+	var c := cardinal.strip_edges().to_upper()
+	if c == "N":
+		return "S"
+	if c == "S":
+		return "N"
+	if c == "E":
+		return "W"
+	if c == "W":
+		return "E"
+	return ""
+
+
+func _get_spawn_edge_for_start_area(story_start_area_id: String) -> String:
+	"""Load world_graph.json; return spawn edge (opposite of main-chain exit) for start area, or "" if not found."""
+	var path := _resolve_path(world_graph_path)
+	var data = _load_json(path)
+	if data == null:
+		return ""
+	var spine: Array = data.get("story_spine", [])
+	var connections: Array = data.get("connections", [])
+	# Use first story step (spine[0] -> spine[1]) so main chain direction is correct
+	if spine.size() >= 2 and str(spine[0]) == story_start_area_id:
+		var to_id := str(spine[1])
+		for c in connections:
+			if c is not Dictionary:
+				continue
+			if str(c.get("from_area_id", "")) != story_start_area_id or str(c.get("to_area_id", "")) != to_id:
+				continue
+			var from_edge := str(c.get("from_edge", "")).strip_edges().to_upper()
+			if from_edge.is_empty():
+				continue
+			return _opposite_edge(from_edge)
+	# Fallback: first connection from start area
+	for c in connections:
+		if c is not Dictionary:
+			continue
+		if str(c.get("from_area_id", "")) != story_start_area_id:
+			continue
+		var from_edge := str(c.get("from_edge", "")).strip_edges().to_upper()
+		if from_edge.is_empty():
+			continue
+		return _opposite_edge(from_edge)
+	return ""
+
 
 func _build_runtime_from_v3(v3: Dictionary) -> Dictionary:
 	var world_space: Dictionary = v3.get("world_space", {})
@@ -289,6 +451,17 @@ func _build_runtime_from_v3(v3: Dictionary) -> Dictionary:
 		if v3_areas.has(aid):
 			intent = (v3_areas[aid] as Dictionary).get("intent", {})
 
+		# v3 roads_world points appear to be TILE CENTERS in world-space.
+		# We keep them as centers in LOCAL coords and render without +0.5 offsets.
+		var road_tiles_world_local: Array = []
+		var roads_world: Array = a_ws.get("roads_world", [])
+		for t in roads_world:
+			if t is Array and t.size() >= 2:
+				road_tiles_world_local.append([
+					(float(t[0]) - rx) * scale,
+					(float(t[1]) - ry) * scale
+				])
+
 		var entities_local: Array = []
 		var entities_world: Dictionary = a_ws.get("entities_world", {})
 		for eid in entities_world.keys():
@@ -301,26 +474,30 @@ func _build_runtime_from_v3(v3: Dictionary) -> Dictionary:
 			if intent.has(eid):
 				dir = str((intent[eid] as Dictionary).get("dir", ""))
 			var needs_frontage: bool = bool(e.get("needs_frontage", false))
+			
+			# Calculate rotation: use road-based rotation if needs_frontage and align_entities_to_roads is enabled, otherwise use cardinal direction
+			var rotation_deg: float
+			if align_entities_to_roads and needs_frontage and not road_tiles_world_local.is_empty():
+				# Align with nearest road direction
+				var entity_x_local := (ex - rx) * scale
+				var entity_y_local := (ey - ry) * scale
+				rotation_deg = _calculate_rotation_from_road(
+					entity_x_local, entity_y_local, ew * scale, eh * scale,
+					road_tiles_world_local, needs_frontage
+				)
+			else:
+				# Use cardinal direction from intent
+				rotation_deg = _dir_to_yaw_deg(dir)
+			
 			entities_local.append({
 				"id": str(eid),
 				"x": (ex - rx) * scale,
 				"y": (ey - ry) * scale,
 				"w": ew * scale,
 				"h": eh * scale,
-				"rotation_deg": _dir_to_yaw_deg(dir),
+				"rotation_deg": rotation_deg,
 				"needs_frontage": needs_frontage
 			})
-
-		# v3 roads_world points appear to be TILE CENTERS in world-space.
-		# We keep them as centers in LOCAL coords and render without +0.5 offsets.
-		var road_tiles_world_local: Array = []
-		var roads_world: Array = a_ws.get("roads_world", [])
-		for t in roads_world:
-			if t is Array and t.size() >= 2:
-				road_tiles_world_local.append([
-					(float(t[0]) - rx) * scale,
-					(float(t[1]) - ry) * scale
-				])
 
 		out_area_layouts[str(aid)] = {
 			"entities": entities_local,
@@ -916,20 +1093,55 @@ func _spawn_world(world_data: Dictionary) -> void:
 	for conn in world_data.get("connections", []):
 		_draw_connection(conn)
 
+func _get_final_npc_area_id() -> String:
+	"""
+	Load world_plan.json and return the area_id of the final main NPC (is_final=true),
+	falling back to "" when unavailable.
+	"""
+	var wp_path := _resolve_path(world_plan_path)
+	var wp = _load_json(wp_path)
+	if wp == null or not wp.has("npc_plan"):
+		return ""
+	var npcs: Array = wp.get("npc_plan", [])
+	var final_area_id := ""
+	for npc in npcs:
+		if npc is Dictionary and npc.get("role", "") == "main" and npc.get("is_final", false):
+			final_area_id = str(npc.get("area_id", ""))
+			break
+	return final_area_id
+
+
 func _get_story_start_area_id() -> String:
-	"""Load dialogue.json and return the area id of the first event that has tags.area (story start)."""
+	"""
+	Load dialogue.json and return the area id of the first event that has tags.area
+	for a NON-final area (story start). If all tagged events belong to the final NPC's
+	area, fall back to that area.
+	"""
 	var path := _resolve_path("res://generated/dialogue.json")
 	var data = _load_json(path)
 	if data == null:
 		return ""
+
+	var final_area_id := _get_final_npc_area_id()
 	var evs: Array = data.get("events", [])
+	var fallback_area_id := ""
+
 	for ev in evs:
 		if ev is not Dictionary:
 			continue
 		var tags = ev.get("tags", {})
 		if tags is Dictionary and tags.has("area"):
-			return str(tags.get("area", ""))
-	return ""
+			var aid := str(tags.get("area", ""))
+			if aid == "":
+				continue
+			if aid != final_area_id and final_area_id != "":
+				# Prefer the first non-final area that appears in dialogue.
+				return aid
+			# Remember the first seen area as a fallback (may be final area).
+			if fallback_area_id == "":
+				fallback_area_id = aid
+
+	return fallback_area_id
 
 func _spawn_player(world_data: Dictionary) -> void:
 	print("WorldLoader: _spawn_player called")
@@ -947,33 +1159,18 @@ func _spawn_player(world_data: Dictionary) -> void:
 				print("WorldLoader: Spawning at story start area: ", story_start_area_id)
 				break
 	else:
-		for a in areas:
-			if a.get("area_id") == "mountain_road":
-				spawn_area = a
-				break
+		# Fallback: use first area in world_data (no hardcoded area IDs)
+		spawn_area = areas[0]
+		print("WorldLoader: No story start in dialogue, spawning at first area: ", spawn_area.get("area_id", ""))
 			
-	var spawn_pos = Vector3.ZERO
-	var found_gate = false
-	
-	# Try to find a gate for this area to spawn at (avoids spawning inside buildings)
-	var gates = world_data.get("gates", [])
-	for g in gates:
-		if g.get("area_id") == spawn_area.get("area_id"):
-			var gx = float(g.get("world_x", 0))
-			var gy = float(g.get("world_y", 0))
-			var spawn_y = player_height_m * 50.0 # Spawn MUCH higher to avoid tree tops
-			spawn_pos = Vector3(gx, spawn_y, gy) * tile_size_m
-			found_gate = true
-			break
-	
-	# Fallback to center if no gate found
-	if not found_gate:
-		var x := float(spawn_area.get("x", 0))
-		var y := float(spawn_area.get("y", 0))
-		var w := float(spawn_area.get("w", 40))
-		var h := float(spawn_area.get("h", 30))
-		var spawn_y = player_height_m * 50.0 # Spawn MUCH higher to avoid tree tops
-		spawn_pos = Vector3(x + w/2.0, spawn_y, y + h/2.0) * tile_size_m
+	# Spawn at center of start area by default
+	var x := float(spawn_area.get("x", 0))
+	var y := float(spawn_area.get("y", 0))
+	var w := float(spawn_area.get("w", 40))
+	var h := float(spawn_area.get("h", 30))
+	var spawn_y = player_height_m * 50.0 # Spawn MUCH higher to avoid tree tops
+	var spawn_pos := Vector3(x + w / 2.0, spawn_y, y + h / 2.0) * tile_size_m
+	print("WorldLoader: Spawning at area center: ", spawn_area.get("area_id", ""), " ", spawn_pos)
 	
 	# Create player programmatically to avoid dependency errors with Player.tscn
 	print("WorldLoader: Creating Player programmatically...")
@@ -1461,6 +1658,10 @@ func _spawn_npcs_for_area(area_node: Node3D, area_id: String) -> void:
 	var road_tiles: Array = a.get("road_tiles_world", [])
 	var tilemap_min_x: float = float(a.get("tilemap_min_x", 0.0))
 	var tilemap_min_y: float = float(a.get("tilemap_min_y", 0.0))
+	
+	# Track occupied positions in this area to prevent NPC overlap
+	var occupied_positions: Array[Vector2] = []
+	
 	for npc in npc_plan:
 		if str(npc.get("area_id", "")) != area_id:
 			continue
@@ -1490,75 +1691,73 @@ func _spawn_npcs_for_area(area_node: Node3D, area_id: String) -> void:
 		var npc_grid_x: float
 		var npc_grid_z: float
 		var needs_frontage: bool = bool(e.get("needs_frontage", false))
+		
+		var found_pos := false
 		if needs_frontage and road_tiles.size() > 0:
 			var ideal_gx := cx + 2.0 * dir_x
 			var ideal_gz := cz + 2.0 * dir_z
-			var best_dist := 1e10
-			var best_tile: Array = []
-			for t in road_tiles:
+			
+			# Sort road tiles by distance to ideal spot
+			var sorted_roads = road_tiles.duplicate()
+			sorted_roads.sort_custom(func(ta, tb):
+				var da = (float(ta[0]) - ideal_gx)**2 + (float(ta[1]) - ideal_gz)**2
+				var db = (float(tb[0]) - ideal_gx)**2 + (float(tb[1]) - ideal_gz)**2
+				return da < db
+			)
+			
+			for t in sorted_roads:
 				if not (t is Array) or t.size() < 2:
 					continue
 				var tgx := float(t[0])
 				var tgz := float(t[1])
+				
+				# Check if tile is occupied by entity or another NPC
 				if _point_inside_any_entity(tgx, tgz, entities):
 					continue
-				var d := (tgx - ideal_gx) * (tgx - ideal_gx) + (tgz - ideal_gz) * (tgz - ideal_gz)
-				if d < best_dist:
-					best_dist = d
-					best_tile = t
-			if best_tile.size() >= 2:
-				npc_grid_x = float(best_tile[0])
-				npc_grid_z = float(best_tile[1])
-			else:
-				npc_grid_x = ideal_gx
-				npc_grid_z = ideal_gz
-			if _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
-				var offset_min := maxf(ew, eh) / 2.0 + NPC_ENTITY_MARGIN
-				var offset := offset_min
-				for try in range(25):
-					npc_grid_x = cx + offset * dir_x
-					npc_grid_z = cz + offset * dir_z
-					if not _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+				
+				var too_close := false
+				for occ in occupied_positions:
+					if Vector2(tgx, tgz).distance_to(occ) < 0.8:
+						too_close = true
 						break
-					offset += 0.5
-				if _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
+				if too_close:
 					continue
-		else:
-			if road_tiles.size() > 0:
-				var best_road_dist := 1e10
-				var rx := cx
-				var rz := cz
-				for t in road_tiles:
-					if not (t is Array) or t.size() < 2:
-						continue
-					var tgx := float(t[0])
-					var tgz := float(t[1])
-					if _point_inside_any_entity(tgx, tgz, entities):
-						continue
-					var d := (tgx - cx) * (tgx - cx) + (tgz - cz) * (tgz - cz)
-					if d < best_road_dist:
-						best_road_dist = d
-						rx = tgx
-						rz = tgz
-				if best_road_dist < 1e9:
-					var dx := rx - cx
-					var dz := rz - cz
-					var len_sq := dx * dx + dz * dz
-					if len_sq > 0.0001:
-						var inv := 1.0 / sqrt(len_sq)
-						dir_x = dx * inv
-						dir_z = dz * inv
-			var offset_min := maxf(ew, eh) / 2.0 + NPC_ENTITY_MARGIN
+				
+				npc_grid_x = tgx
+				npc_grid_z = tgz
+				found_pos = true
+				break
+				
+		if not found_pos:
+			# Fallback: search in circles around anchor
+			var offset_min := maxf(ew, eh) / 2.0 + NPC_ENTITY_MARGIN + 0.5
 			var offset := offset_min
-			var max_tries := 25
-			for try in range(max_tries):
-				npc_grid_x = cx + offset * dir_x
-				npc_grid_z = cz + offset * dir_z
+			for try in range(50):
+				# Stir the direction slightly for each NPC to avoid overlap on fallback
+				var stir := (occupied_positions.size() * 0.5)
+				var try_rad = rad + stir
+				var try_dir_x = sin(try_rad)
+				var try_dir_z = -cos(try_rad)
+				
+				npc_grid_x = cx + offset * try_dir_x
+				npc_grid_z = cz + offset * try_dir_z
+				
 				if not _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
-					break
+					var too_close := false
+					for occ in occupied_positions:
+						if Vector2(npc_grid_x, npc_grid_z).distance_to(occ) < 1.0:
+							too_close = true
+							break
+					if not too_close:
+						found_pos = true
+						break
 				offset += 0.5
-			if _point_inside_any_entity(npc_grid_x, npc_grid_z, entities):
-				continue
+		
+		if not found_pos:
+			continue # Still couldn't find a spot
+			
+		occupied_positions.append(Vector2(npc_grid_x, npc_grid_z))
+		
 		var world_x := (npc_grid_x + tilemap_min_x) * tile_size_m
 		var world_z := (npc_grid_z + tilemap_min_y) * tile_size_m
 		var npc_id := str(npc.get("npc_id", "npc"))
