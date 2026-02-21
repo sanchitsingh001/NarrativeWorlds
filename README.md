@@ -16,6 +16,16 @@ World generation research often relies on diffusion-based architectures that nee
 
 ---
 
+## Demo Videos
+
+Examples of 3D worlds built by this pipeline (click to play):
+
+[![Demo 1](https://img.youtube.com/vi/idmpE45NJXk/0.jpg)](https://www.youtube.com/watch?v=idmpE45NJXk)
+[![Demo 2](https://img.youtube.com/vi/uXUPoMcHT8A/0.jpg)](https://www.youtube.com/watch?v=uXUPoMcHT8A)
+[![Demo 3](https://img.youtube.com/vi/Q3fkfKG3wu4/0.jpg)](https://www.youtube.com/watch?v=Q3fkfKG3wu4)
+
+---
+
 ## Pipeline Stages
 
 | Stage | Description |
