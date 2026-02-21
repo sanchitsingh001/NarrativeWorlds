@@ -2,6 +2,8 @@
 
 Reference implementation of [*Training-Free Construction of Executable 3D Worlds from Narrative Text*](https://www.yanah.world/ICLR_v1.pdf). This repository provides a modular, training-free pipeline that turns natural-language stories into navigable, traversable 3D environments—without diffusion models or large-scale training.
 
+**Track current progress:** [yanah.world](https://www.yanah.world/)
+
 ---
 
 ## Overview
