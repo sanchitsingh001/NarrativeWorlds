@@ -1,4 +1,4 @@
-# Training-Free Construction of Executable 3D Worlds from Narrative Text
+# Modular Training-Free Construction of Executable 3D Worlds from Narrative Text
 
 Reference implementation of [*Modular Training-Free Construction of Executable 3D Worlds from Narrative Text*](https://openreview.net/forum?id=aj6jxs2key#discussion). This repository provides a modular, training-free pipeline that turns natural-language stories into navigable, traversable 3D environments—without diffusion models or large-scale training.
 
